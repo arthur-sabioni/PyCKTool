@@ -10,20 +10,30 @@ class FolderParser:
         self.path = path
         self.parser = CodeParser()
 
-    def build_full_code_string(self):
+    def _build_full_code_string(self):
+        """
+        Builds a string containing all the code from the python files in the 
+            folder and its subfolders.
+        """
         full_code = ""
         for file_path in glob.iglob(os.path.join(self.path, '**', '*.py'), recursive=True):
             with open(file_path, 'r', encoding='utf-8') as file:
                 full_code += file.read() + '\n'
         return full_code
     
-    def parse_path(self) -> dict:
+    def parse_path(self) -> tuple[dict, dict]:
 
-        code = self.build_full_code_string()
+        """
+        Parses all the python files in the folder and its subfolders.
 
-        self.parser.extract_classes_and_methods(code)
+        Returns:
+            dict: The extracted data.
+        """
+        code = self._build_full_code_string()
 
-        print('')
+        self.parser.extract_code_data(code)
+
+        return self.parser.classes, self.parser.inheritances
 
 if __name__ == "__main__":
 

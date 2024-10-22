@@ -71,9 +71,12 @@ class CodeParser:
                 lloc += self.count_lloc_in_compound_statement(child)
         return lloc
     
-    def _extract_used_attributes_recursive(self, node, dict, class_name) -> None:
+    def _extract_used_attributes_recursive(
+        self, node, dict, class_name
+    ) -> None:
         """
-        Recursively traverse the node and extract the methods that are called and the attributes that are accessed. 
+        Recursively traverse the node and extract the methods that are called 
+            and the attributes that are accessed. 
         The extracted data is stored in the given dictionary.
         """
         if isinstance(node, astroid.Call):
@@ -96,8 +99,9 @@ class CodeParser:
 
     def _extract_self_attributes(self, node, dict, class_name) -> None:
         """
-        Extract the attributes of the class that are accessed via the 'self' variable
-          from the given node and store the extracted data in the given dictionary.
+        Extract the attributes of the class that are accessed via the 'self' 
+            variablefrom the given node and store the extracted data in the 
+            given dictionary.
         """
         for target in node.targets:
             if isinstance(target, astroid.AssignAttr):
@@ -113,17 +117,19 @@ class CodeParser:
                 ))
                 dict['accessed_attributes'].add(attr_name)
         
-    def _extract_methods(self, node: astroid.FunctionDef, class_name: str) -> None:
-        
+    def _extract_methods(
+        self, node: astroid.FunctionDef, class_name: str
+    ) -> None:
         """
-        Extract the methods of the class from the given node and store the extracted data in the 
-        classes dictionary.
+        Extract the methods of the class from the given node and store the 
+            extracted data in the classes dictionary.
 
-        The extracted data includes the name of the method, the logical lines of code (LLOC), the number of
-        parameters, the attributes that are accessed and the methods that are called.
+        The extracted data includes the name of the method, the logical lines of 
+            code (LLOC), the number of parameters, the attributes that are 
+            accessed and the methods that are called.
         """
         method_name = node.name
-        method_dict = self._METHOD_INIT
+        method_dict = self._METHOD_INIT.copy()
         method_dict['lloc'] = self.count_lloc(node)
         method_dict['number_of_parameters'] = len(node.args.args)
         
@@ -138,18 +144,21 @@ class CodeParser:
 
         self.classes[class_name]['methods'][method_name] = method_dict
                             
-    def _extract_inheritance(self, base: astroid.FunctionDef, class_name: str) -> None:
+    def _extract_inheritance(
+        self, base: astroid.FunctionDef, class_name: str
+    ) -> None:
+        """
+        Extract the inheritance information for the given class.
+        """
         base_class = base.name
         self.inheritances[class_name] = base_class
-        if base_class in self.classes:
-            self.classes[base_class]['direct_children'] += 1
 
     def _extract_classes_data(self, module: astroid.Module) -> None:
         
         for node in module.body:
             if isinstance(node, astroid.ClassDef):
                 class_name = node.name
-                self.classes[class_name] = self._CLASS_INIT
+                self.classes[class_name] = self._CLASS_INIT.copy()
 
                 # Extract methods and attributes
                 for class_node in node.body:
@@ -167,7 +176,7 @@ class CodeParser:
                     # Method call or attribute access
                     if isinstance(class_node, (astroid.Expr, astroid.Assign)):
                         self._extract_used_attributes_recursive(
-                            class_node.value, class_node, class_name
+                            class_node.value, self.classes[class_name], class_name
                         )
 
                 # Extract inheritance information
