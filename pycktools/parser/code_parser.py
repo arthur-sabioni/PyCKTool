@@ -12,13 +12,14 @@ class CodeParser:
         'attributes': set(),
         'variables': set(),
         'direct_children': 0,
-        'coupled_classes': set()
+        'coupled_classes': set(),
+        'lloc': 1
     }
 
     _METHOD_INIT = {
         'accessed_attributes': set(),
         'called': set(),
-        'lloc': 0,
+        'lloc': 1,
         'number_of_parameters': 0,
     }
     
@@ -184,20 +185,13 @@ class CodeParser:
                     if isinstance(base, astroid.Name):
                         self._extract_inheritance(base, class_name)
 
-    def _translate_attributes_to_classes(self) -> None:
-        pass
-        # for class_name, class_data in self.classes.items():
-        #     for method, method_data in class_data['methods'].items():
-        #         for attr in method_data['accessed_attrigutes']:
-        #             if attr in self.classes.keys():
-        #                 self.classes[class_name]['coupled_classes'].add(attr_type)
-
     def extract_code_data(self, code: str) -> None:
         
+        #TODO: Add LLOC fill in classes
+
         module = astroid.parse(code)
 
         self._extract_classes_data(module)
-        self._translate_attributes_to_classes()
 
 
 # Test execution

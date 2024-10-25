@@ -3,7 +3,7 @@ import csv
 class CSVOutput:
 
     @staticmethod
-    def save_results_csv(data: dict, path: str) -> None:
+    def save_results(data: dict, path: str) -> None:
         headers = data.keys()
 
         with open(path, 'w', newline='') as file:
