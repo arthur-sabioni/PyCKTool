@@ -1,7 +1,8 @@
 import astroid
+import copy
 import json
 
-from utils.json_utils import SetEncoder
+#from utils.json_utils import SetEncoder
 
 class CodeParser:
 
@@ -32,7 +33,9 @@ class CodeParser:
         """
         Count the number of logical lines of code in the given AST node.
         """
-        if not isinstance(node, (astroid.FunctionDef, astroid.AsyncFunctionDef)):
+        if not isinstance(node, (
+            astroid.FunctionDef, astroid.AsyncFunctionDef, astroid.ClassDef
+        )):
             raise ValueError("Node must be a function or method definition")
         
         lloc = 0
@@ -45,6 +48,8 @@ class CodeParser:
                 lloc += 1
             elif isinstance(child, (astroid.If, astroid.For, astroid.While, astroid.Try, astroid.With)):
                 lloc += self.count_lloc_in_compound_statement(child)
+            elif isinstance(child, (astroid.FunctionDef, astroid.AsyncFunctionDef)):
+                lloc += 1 + self.count_lloc(child)
         return lloc
 
     def count_lloc_in_compound_statement(self, node):
@@ -130,7 +135,7 @@ class CodeParser:
             accessed and the methods that are called.
         """
         method_name = node.name
-        method_dict = self._METHOD_INIT.copy()
+        method_dict = copy.deepcopy(self._METHOD_INIT)
         method_dict['lloc'] = self.count_lloc(node)
         method_dict['number_of_parameters'] = len(node.args.args)
         
@@ -159,7 +164,8 @@ class CodeParser:
         for node in module.body:
             if isinstance(node, astroid.ClassDef):
                 class_name = node.name
-                self.classes[class_name] = self._CLASS_INIT.copy()
+                self.classes[class_name] = copy.deepcopy(self._CLASS_INIT)
+                self.classes[class_name]['lloc'] = self.count_lloc(node)
 
                 # Extract methods and attributes
                 for class_node in node.body:
@@ -186,9 +192,6 @@ class CodeParser:
                         self._extract_inheritance(base, class_name)
 
     def extract_code_data(self, code: str) -> None:
-        
-        #TODO: Add LLOC fill in classes
-
         module = astroid.parse(code)
 
         self._extract_classes_data(module)
@@ -237,5 +240,5 @@ if __name__ == "__main__":
     """)
     
     print('')
-    print(json.dumps(cp.classes, cls=SetEncoder))
-    print(json.dumps(cp.inheritances, cls=SetEncoder))
+    #print(json.dumps(cp.classes, cls=SetEncoder))
+    #print(json.dumps(cp.inheritances, cls=SetEncoder))

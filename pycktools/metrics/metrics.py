@@ -18,6 +18,10 @@ class Metrics:
             Coupling Between Classes (CBO)
             Response for Class (RFC)
             Lack of Cohesion (LCOM)
+            Fan In (FIN)
+            Fan Out (FOUT)
+            Logical Lines of Code (LLOC)
+            Number of Attributes (NOA)
         """
         results = {}
     
@@ -58,6 +62,7 @@ class Metrics:
             for method in self._classes_data[class_name]['methods'].keys():
                 method_data = self._classes_data[class_name]['methods'][method]
                 class_data = self._classes_data[class_name]
+                results[class_name] = dict()
                 results[class_name][method] = {
                     'WMC': self.wheighted_methods_per_class(
                         method_data, class_data['lloc']
@@ -148,6 +153,8 @@ class Metrics:
         class that do not access any attribute of the class, divided by the
         total number of methods in the class.
         """
+        if len(data['methods']) == 0:
+            return 0
         attributes_accessed = set()
         for method in data['methods'].values():
             attributes_accessed.update(method['accessed_attributes'])
@@ -190,4 +197,4 @@ class Metrics:
 
     @staticmethod
     def number_of_attributes(data: dict) -> int:
-        pass
+        return len(data['attributes'])

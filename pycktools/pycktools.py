@@ -8,9 +8,11 @@ def run(path: str, output_format: str= 'csv') -> None:
     fp.parse_path()
 
     metrics = Metrics(fp.parser.classes, fp.parser.inheritances)
-    results = metrics.calculate_metrics()
+    results_class, results_methods = metrics.calculate_all_metrics()
 
-    OutputHandler.save_results(results, 'results', output_format)
+    OutputHandler.save_results(
+        results_class, results_methods, 'results', output_format
+    )
 
     print('')
 
