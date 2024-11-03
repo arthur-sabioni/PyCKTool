@@ -1,7 +1,8 @@
 import os
 import glob
+import chardet
 
-from parser.code_parser import CodeParser
+from pycktools.parser.code_parser import CodeParser
 
 class FolderParser:
 
@@ -9,17 +10,19 @@ class FolderParser:
 
         self.path = path
         self.parser = CodeParser()
-
-    def _build_full_code_string(self):
+        
+    @staticmethod
+    def _guess_file_encode(file_path):
         """
-        Builds a string containing all the code from the python files in the 
-            folder and its subfolders.
+        Guess the encoding of a file using chardet library.
+        If undefined, utf-8 is default
         """
-        full_code = ""
-        for file_path in glob.iglob(os.path.join(self.path, '**', '*.py'), recursive=True):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                full_code += file.read() + '\n'
-        return full_code
+        file_encoding = ""
+        with open(file_path, 'rb') as file:
+            file_encoding = chardet.detect(file.read())['encoding']
+        if file_encoding is None:
+            return 'utf-8'
+        return file_encoding
     
     def parse_path(self) -> tuple[dict, dict]:
 
@@ -29,14 +32,29 @@ class FolderParser:
         Returns:
             dict: The extracted data.
         """
-        code = self._build_full_code_string()
-
-        self.parser.extract_code_data(code)
-
+        #TODO: Modularize this code
+        for file_path in glob.iglob(os.path.join(self.path, '**', '*.py'), recursive=True):
+            current_code = ""
+            try:
+                with open(file_path, 'r', encoding='utf_8_sig') as file:
+                    current_code = file.read()
+            except UnicodeDecodeError:
+                # Try to detect file encoding
+                try:
+                    file_encoding = self._guess_file_encode(file_path)
+                    with open(file_path, 'r', encoding=file_encoding) as file:
+                        current_code = file.read()
+                except:
+                    print('Failed to read file: ', file_path)
+            try:
+                self.parser.extract_code_data(current_code)
+            except:
+                print('Failed to parse file content: ', file_path)
+            
         return self.parser.classes, self.parser.inheritances
 
 if __name__ == "__main__":
 
-    path = 'F:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
+    path = 'C:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
     fp = FolderParser(path)
     fp.parse_path()

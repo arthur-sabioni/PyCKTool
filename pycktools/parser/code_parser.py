@@ -1,6 +1,5 @@
 import astroid
 import copy
-import json
 
 #from utils.json_utils import SetEncoder
 
@@ -192,6 +191,9 @@ class CodeParser:
                         self._extract_inheritance(base, class_name)
 
     def extract_code_data(self, code: str) -> None:
+        """
+        Extract the data from the given code string.
+        """
         module = astroid.parse(code)
 
         self._extract_classes_data(module)

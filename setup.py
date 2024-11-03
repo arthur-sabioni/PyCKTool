@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 import os
 
-with open(os.path.join('..','README.md'), 'r') as f:
+with open(os.path.join('README.md'), 'r') as f:
     long_description = f.read()
     
-with open('requirements.txt') as f:
+with open(os.path.join('pycktools', 'requirements.txt')) as f:
     requirements = f.readlines()
 
 setup(
@@ -17,7 +17,12 @@ setup(
     description='Chidamber and Kemerer metrics for Python',
     platforms='any',
     packages=find_packages(),
-    install_requirements=requirements,
+    entry_points={
+        "console_scripts": [
+            "pycktools=pycktools.main:main",
+        ],
+    },
+    install_requires=requirements,
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: Developers',

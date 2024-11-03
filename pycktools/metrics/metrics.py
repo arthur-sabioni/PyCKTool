@@ -57,12 +57,13 @@ class Metrics:
             Logical Lines of Code (LLOC)
         """
         results = {}
+        for class_name in self._classes_data.keys():
+            results[class_name] = dict()
     
         for class_name in self._classes_data.keys():
             for method in self._classes_data[class_name]['methods'].keys():
                 method_data = self._classes_data[class_name]['methods'][method]
                 class_data = self._classes_data[class_name]
-                results[class_name] = dict()
                 results[class_name][method] = {
                     'WMC': self.wheighted_methods_per_class(
                         method_data, class_data['lloc']
@@ -100,9 +101,14 @@ class Metrics:
         The depth is the number of superclasses until the root of the 
         inheritance tree is reached.
         """
+        visited = set()
         depth = 0
         current = class_name
         while current in data.keys():
+            # Found a cicle, cant calculate DIT
+            if current in visited:
+                return None
+            visited.add(current)
             depth += 1
             current = data[current]
         return depth

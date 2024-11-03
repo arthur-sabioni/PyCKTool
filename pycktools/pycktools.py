@@ -1,6 +1,6 @@
-from output_handler.output_handler import OutputHandler
-from parser.folder_parser import FolderParser
-from metrics.metrics import Metrics
+from pycktools.output_handler.output_handler import OutputHandler
+from pycktools.parser.folder_parser import FolderParser
+from pycktools.metrics.metrics import Metrics
 
 def run(path: str, output_format: str= 'csv') -> None:
 
@@ -18,5 +18,5 @@ def run(path: str, output_format: str= 'csv') -> None:
 
 if __name__ == "__main__":
 
-    path = 'F:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
+    path = 'C:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
     run(path, 'csv')
