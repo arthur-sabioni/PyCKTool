@@ -1,20 +1,35 @@
-'''This module contains the main() function, which is the entry point for the
-command line interface.'''
+
+import argparse
+import sys
+
+from pycktools.pycktools_run import run
+
+'''
+This module contains the main() function, which is the entry point for the
+command line interface.
+'''
+
 __version__ = '1.0.0'
 
 def main():
     '''The entry point for Setuptools.'''
-    import sys
-    from pycktools.pycktools_run import run
 
-    print(sys.argv)
-    if not sys.argv[1]:
-        print('No path specified.')
-        exit(1)
-    if not sys.argv[2]:
-        sys.argv.append('csv')
+    parser = argparse.ArgumentParser(description="Execute MyLibrary from the console.")
+    parser.add_argument(
+        "path", type=str, help="Path of the analyzed code.", default='.', nargs='?'
+    )
+    parser.add_argument(
+        "--format", type=str, help="Format of the output file.", default='csv',
+        choices=['csv', 'json']
+    )
+    # TODO: Use output name
+    parser.add_argument(
+        "--output-name", type=str, help="Name of the output file."
+    )
+    args = parser.parse_args()
+
     try:
-        run(sys.argv[1], sys.argv[2])
+        run(args.path, args.format)
     except Exception as e:
         print(e)
 
