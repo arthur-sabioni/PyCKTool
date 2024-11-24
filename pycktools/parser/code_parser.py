@@ -1,5 +1,4 @@
 import astroid
-import copy
 
 from pycktools.model.class_model import Class
 from pycktools.model.method_model import Method
@@ -10,6 +9,13 @@ class CodeParser:
     def __init__(self) -> None:
 
         self.classes: dict[str, Class] = {}
+
+    def _get_class(self, class_name: str) -> Class:
+        """
+        Gets a class from the classes dictionary, or creates a new class if not 
+            found.
+        """
+        return self.classes.get(class_name, Class(class_name))
 
     def count_lloc(self, node):
         """
@@ -161,7 +167,7 @@ class CodeParser:
         """
         base_class = base.name
         # Create base_class, if doesnt exist
-        self.classes[base_class] = self.classes.get(base_class, Class(base_class))
+        self.classes[base_class] = self._get_class(base_class)
 
         self.classes[class_name].parents.append(self.classes[base_class])
 
@@ -176,9 +182,7 @@ class CodeParser:
         for node in module.body:
             if isinstance(node, astroid.ClassDef):
                 class_name = node.name
-                self.classes[class_name] = self.classes.get(
-                    class_name, Class(class_name)
-                )
+                self.classes[class_name] = self._get_class(class_name)
                 self.classes[class_name].file = module.path
                 self.classes[class_name].lloc = self.count_lloc(node)
 
@@ -277,7 +281,3 @@ if __name__ == "__main__":
             print(local_variable)
 
     """)
-    
-    print('')
-    #print(json.dumps(cp.classes, cls=SetEncoder))
-    #print(json.dumps(cp.inheritances, cls=SetEncoder))
