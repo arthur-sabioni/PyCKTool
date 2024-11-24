@@ -2,6 +2,7 @@ import os
 import glob
 import chardet
 
+from pycktools.model.class_model import Class
 from pycktools.parser.code_parser import CodeParser
 
 class FolderParser:
@@ -24,7 +25,7 @@ class FolderParser:
             return 'utf-8'
         return file_encoding
     
-    def parse_path(self) -> tuple[dict, dict]:
+    def parse_path(self) -> dict[str, Class]:
 
         """
         Parses all the python files in the folder and its subfolders.
@@ -49,12 +50,11 @@ class FolderParser:
             try:
                 self.parser.extract_code_data(current_code, file_path)
             except Exception as e:
-                raise e
                 print('Failed to parse file content: ', file_path)
 
         self.parser.process_possible_coupled_classes()
             
-        return self.parser.classes, self.parser.inheritances
+        return self.parser.classes
 
 if __name__ == "__main__":
 

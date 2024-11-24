@@ -7,7 +7,7 @@ def run(path: str, output_format: str= 'csv') -> None:
     fp = FolderParser(path)
     fp.parse_path()
 
-    metrics = Metrics(fp.parser.classes, fp.parser.inheritances)
+    metrics = Metrics(fp.parser.classes)
     results_class, results_methods = metrics.calculate_all_metrics()
 
     OutputHandler.save_results(

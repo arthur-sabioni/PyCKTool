@@ -1,34 +1,15 @@
 import astroid
 import copy
 
-#from utils.json_utils import SetEncoder
+from pycktools.model.class_model import Class
+from pycktools.model.method_model import Method
+from pycktools.model.model import Model
 
 class CodeParser:
-
-    _CLASS_INIT = {
-        'file': '',
-        'accessed_attributes': set(),
-        'called': set(),
-        'methods': {},
-        'attributes': set(),
-        'variables': set(),
-        'direct_children': 0,
-        'possible_coupled_classes': set(),
-        'coupled_classes': set(),
-        'lloc': 1
-    }
-
-    _METHOD_INIT = {
-        'accessed_attributes': set(),
-        'called': set(),
-        'lloc': 1,
-        'number_of_parameters': 0,
-    }
     
     def __init__(self) -> None:
 
-        self.classes = {}
-        self.inheritances = {}
+        self.classes: dict[str, Class] = {}
 
     def count_lloc(self, node):
         """
@@ -87,13 +68,13 @@ class CodeParser:
                 if inferred is astroid.Uninferable:
                     raise Exception
                 if isinstance(inferred, astroid.ClassDef):
-                    self.classes[class_name]['coupled_classes'].add(inferred.name)
+                    self.classes[class_name].coupled_classes.add(inferred.name)
             except:
                 # If could not infer, try to detect it at post processing
-                self.classes[class_name]['possible_coupled_classes'].add(node.name)
+                self.classes[class_name].possible_coupled_classes.add(node.name)
     
     def _extract_used_attributes_recursive(
-        self, node, dict, class_name
+        self, node, obj: Model, class_name
     ) -> None:
         """
         Recursively traverse the node and extract the methods that are called 
@@ -103,9 +84,9 @@ class CodeParser:
         if isinstance(node, astroid.Call):
             if node.args:
                 for arg in node.args:
-                    self._extract_used_attributes_recursive(arg, dict, class_name)
+                    self._extract_used_attributes_recursive(arg, obj, class_name)
             called_method = node.func.as_string()
-            dict['called'].add(called_method)
+            obj.called.add(called_method)
 
             self._extract_coupled_classes(node.func, class_name)
 
@@ -116,13 +97,13 @@ class CodeParser:
 
         if isinstance(node, astroid.Attribute):
             attr_name = node.attrname
-            if node.expr.as_string() != 'self':
+            if 'self' not in node.expr.as_string():
                 used_class = node.expr.as_string()
-                self.classes[class_name]['coupled_classes'].add(used_class)
+                self.classes[class_name].coupled_classes.add(used_class)
                 attr_name = used_class + '.' + attr_name
-            dict['accessed_attributes'].add(attr_name)
+            obj.accessed_attributes.add(attr_name)
 
-    def _extract_self_attributes(self, node, dict, class_name) -> None:
+    def _extract_self_attributes(self, node, obj: Model, class_name) -> None:
         """
         Extract the attributes of the class that are accessed via the 'self' 
             variablefrom the given node and store the extracted data in the 
@@ -140,10 +121,10 @@ class CodeParser:
                             attr_instance = attr_instance[1:]
                 except:
                     attr_instance = None
-                self.classes[class_name]['attributes'].add((
+                self.classes[class_name].attributes.add((
                     attr_name, attr_instance
                 ))
-                dict['accessed_attributes'].add(attr_name)
+                obj.accessed_attributes.add(attr_name)
         
     def _extract_methods(
         self, node: astroid.FunctionDef, class_name: str
@@ -157,20 +138,20 @@ class CodeParser:
             accessed and the methods that are called.
         """
         method_name = node.name
-        method_dict = copy.deepcopy(self._METHOD_INIT)
-        method_dict['lloc'] = self.count_lloc(node)
-        method_dict['number_of_parameters'] = len(node.args.args)
+        method_obj = Method(method_name)
+        method_obj.lloc = self.count_lloc(node)
+        method_obj.number_of_parameters = len(node.args.args)
         
         for method_node in node.body:
             if isinstance(method_node, astroid.Assign):
-                self._extract_self_attributes(method_node, method_dict, class_name)
+                self._extract_self_attributes(method_node, method_obj, class_name)
             
             if isinstance(method_node, (astroid.Expr, astroid.Assign)):
                 self._extract_used_attributes_recursive(
-                    method_node.value, method_dict, class_name
+                    method_node.value, method_obj, class_name
                 )
 
-        self.classes[class_name]['methods'][method_name] = method_dict
+        self.classes[class_name].methods[method_name] = method_obj
                             
     def _extract_inheritance(
         self, base: astroid.FunctionDef, class_name: str
@@ -179,7 +160,10 @@ class CodeParser:
         Extract the inheritance information for the given class.
         """
         base_class = base.name
-        self.inheritances[class_name] = base_class
+        # Create base_class, if doesnt exist
+        self.classes[base_class] = self.classes.get(base_class, Class(base_class))
+
+        self.classes[class_name].parents.append(self.classes[base_class])
 
     def _extract_classes_data(self, module: astroid.Module) -> None:
         
@@ -192,9 +176,11 @@ class CodeParser:
         for node in module.body:
             if isinstance(node, astroid.ClassDef):
                 class_name = node.name
-                self.classes[class_name] = copy.deepcopy(self._CLASS_INIT)
-                self.classes[class_name]['file'] = module.path
-                self.classes[class_name]['lloc'] = self.count_lloc(node)
+                self.classes[class_name] = self.classes.get(
+                    class_name, Class(class_name)
+                )
+                self.classes[class_name].file = module.path
+                self.classes[class_name].lloc = self.count_lloc(node)
 
                 # Extract methods and attributes
                 for class_node in node.body:
@@ -207,7 +193,7 @@ class CodeParser:
                     if isinstance(class_node, astroid.Assign):
                         for target in class_node.targets:
                             attr_name = target.name
-                            self.classes[class_name]['variables'].add(attr_name)
+                            self.classes[class_name].variables.add(attr_name)
                             
                     # Method call or attribute access
                     if isinstance(class_node, (astroid.Expr, astroid.Assign)):
@@ -233,11 +219,8 @@ class CodeParser:
         Process the possible coupled classes for each class in the dictionary.
         """
         all_classes = set(self.classes.keys())
-        for class_name in all_classes:
-            class_data = self.classes[class_name]
-            for possible_coupled_class in class_data['possible_coupled_classes']:
-                if possible_coupled_class in all_classes:
-                    class_data['coupled_classes'].add(possible_coupled_class)
+        for class_obj in self.classes.values():
+            class_obj.process_possible_coupled_classes(all_classes)
 
 
 # Test execution
@@ -267,7 +250,7 @@ if __name__ == "__main__":
             def __init__(self):
                 pass
                 
-        class MyParent(MySuperParent):
+        class MyParent(MySuperParent1, MySuperParent2):
             parent_var = 0
 
             def __init__(self):
