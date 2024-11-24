@@ -1,6 +1,5 @@
 
 import argparse
-import sys
 
 from pycktools.pycktools_run import run
 
