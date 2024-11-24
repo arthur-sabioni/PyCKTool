@@ -6,12 +6,14 @@ import copy
 class CodeParser:
 
     _CLASS_INIT = {
+        'file': '',
         'accessed_attributes': set(),
         'called': set(),
         'methods': {},
         'attributes': set(),
         'variables': set(),
         'direct_children': 0,
+        'possible_coupled_classes': set(),
         'coupled_classes': set(),
         'lloc': 1
     }
@@ -75,6 +77,20 @@ class CodeParser:
             elif isinstance(child, (astroid.If, astroid.For, astroid.While, astroid.Try, astroid.With)):
                 lloc += self.count_lloc_in_compound_statement(child)
         return lloc
+
+    def _extract_coupled_classes(self, node: astroid.Name, class_name: str) -> None:
+
+        # Try to infer a class constructor
+        if isinstance(node, astroid.Name):
+            try:
+                inferred = next(node.infer(), None)
+                if inferred is astroid.Uninferable:
+                    raise Exception
+                if isinstance(inferred, astroid.ClassDef):
+                    self.classes[class_name]['coupled_classes'].add(inferred.name)
+            except:
+                # If could not infer, try to detect it at post processing
+                self.classes[class_name]['possible_coupled_classes'].add(node.name)
     
     def _extract_used_attributes_recursive(
         self, node, dict, class_name
@@ -90,10 +106,14 @@ class CodeParser:
                     self._extract_used_attributes_recursive(arg, dict, class_name)
             called_method = node.func.as_string()
             dict['called'].add(called_method)
+
+            self._extract_coupled_classes(node.func, class_name)
+
+            # Checking if call is a Class method
             if '.' in called_method:
-                callee_class = called_method.split('.')[0]
-                if callee_class != class_name:
-                    self.classes[class_name]['coupled_classes'].add(callee_class)
+                if getattr(node.func, "expr", None):
+                    self._extract_coupled_classes(node.func.expr, class_name)
+
         if isinstance(node, astroid.Attribute):
             attr_name = node.attrname
             if node.expr.as_string() != 'self':
@@ -111,12 +131,15 @@ class CodeParser:
         for target in node.targets:
             if isinstance(target, astroid.AssignAttr):
                 attr_name = target.attrname
-                attr_instance = next(target.infer(), None).pytype()
-                if attr_instance is astroid.Uninferable:
+                try:
+                    attr_instance = next(target.infer(), None).pytype()
+                    if attr_instance is astroid.Uninferable:
+                        attr_instance = None
+                    else:
+                        if attr_instance[0] == '.':
+                            attr_instance = attr_instance[1:]
+                except:
                     attr_instance = None
-                else:
-                    if attr_instance[0] == '.':
-                        attr_instance = attr_instance[1:]
                 self.classes[class_name]['attributes'].add((
                     attr_name, attr_instance
                 ))
@@ -160,10 +183,17 @@ class CodeParser:
 
     def _extract_classes_data(self, module: astroid.Module) -> None:
         
+        """
+        Extracts the data from a class node, including methods and attributes,
+            and stores it in the classes dictionary.
+        Also extracts classes inheritance data.
+        """
+        
         for node in module.body:
             if isinstance(node, astroid.ClassDef):
                 class_name = node.name
                 self.classes[class_name] = copy.deepcopy(self._CLASS_INIT)
+                self.classes[class_name]['file'] = module.path
                 self.classes[class_name]['lloc'] = self.count_lloc(node)
 
                 # Extract methods and attributes
@@ -190,19 +220,40 @@ class CodeParser:
                     if isinstance(base, astroid.Name):
                         self._extract_inheritance(base, class_name)
 
-    def extract_code_data(self, code: str) -> None:
+    def extract_code_data(self, code: str, path: str = '') -> None:
         """
         Extract the data from the given code string.
         """
-        module = astroid.parse(code)
+        module = astroid.parse(code, path=path)
 
         self._extract_classes_data(module)
+
+    def process_possible_coupled_classes(self) -> None:
+        """
+        Process the possible coupled classes for each class in the dictionary.
+        """
+        all_classes = set(self.classes.keys())
+        for class_name in all_classes:
+            class_data = self.classes[class_name]
+            for possible_coupled_class in class_data['possible_coupled_classes']:
+                if possible_coupled_class in all_classes:
+                    class_data['coupled_classes'].add(possible_coupled_class)
 
 
 # Test execution
 if __name__ == "__main__":
     cp = CodeParser()
     cp.extract_code_data(r"""
+                         
+        class UsedClass6:
+            def __init__(self):
+                pass
+
+        class UsedClassWithConst:
+            USED_CONST = 'I am here to be used!'
+
+            def __init__(self):
+                pass
                                    
         class UsedClass:
             def __init__(self):
@@ -227,8 +278,11 @@ if __name__ == "__main__":
 
             def __init__(self, value: str):
                 self.instance_variable = value
-                self.UsedClassAttribute = UsedClass()
+                self.UsedClassAttribute = UsedClass8()
+                self.instance_from_const = UsedClassWithConst.USED_CONST
                 usedClassVariable = UsedClass()
+                UsedClassMethod1.used_method()
+                tmp = UsedClassMethod2.used_method()
 
             def my_method(self):
                 print(self.instance_variable)

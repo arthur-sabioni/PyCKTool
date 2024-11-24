@@ -21,7 +21,6 @@ class OutputHandler:
         if output_format == 'csv':
             formatted_classes_data = CSVOutput.format_class_results(classes_data)
             CSVOutput.save_results(formatted_classes_data, path_classes)
-            print('here')
             formatted_methods_data = CSVOutput.format_method_results(methods_data)
             CSVOutput.save_results(formatted_methods_data, path_methods)
         elif output_format == 'json':

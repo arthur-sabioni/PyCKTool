@@ -14,9 +14,7 @@ def run(path: str, output_format: str= 'csv') -> None:
         results_class, results_methods, 'results', output_format
     )
 
-    print('')
-
 if __name__ == "__main__":
 
-    path = 'C:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
+    path = 'F:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
     run(path, 'csv')

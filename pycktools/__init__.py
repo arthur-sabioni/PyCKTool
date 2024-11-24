@@ -5,7 +5,7 @@ __version__ = '1.0.0'
 def main():
     '''The entry point for Setuptools.'''
     import sys
-    from pycktools.pycktools import run
+    from pycktools.pycktools_run import run
 
     print(sys.argv)
     if not sys.argv[1]:

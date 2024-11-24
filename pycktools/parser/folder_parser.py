@@ -44,17 +44,20 @@ class FolderParser:
                     file_encoding = self._guess_file_encode(file_path)
                     with open(file_path, 'r', encoding=file_encoding) as file:
                         current_code = file.read()
-                except:
+                except Exception as e:
                     print('Failed to read file: ', file_path)
             try:
-                self.parser.extract_code_data(current_code)
-            except:
+                self.parser.extract_code_data(current_code, file_path)
+            except Exception as e:
+                raise e
                 print('Failed to parse file content: ', file_path)
+
+        self.parser.process_possible_coupled_classes()
             
         return self.parser.classes, self.parser.inheritances
 
 if __name__ == "__main__":
 
-    path = 'C:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
+    path = 'F:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
     fp = FolderParser(path)
     fp.parse_path()
