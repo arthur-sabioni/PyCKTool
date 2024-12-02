@@ -39,6 +39,8 @@ class Metrics:
                 'FOUT': self.fan_out(class_name, self._classes_data),
                 'LLOC': self.logical_lines_of_code(class_data),
                 'NOA': self.number_of_attributes(class_data),
+                'NOM': self.number_of_methods(class_data),
+                'WMC': self.wheighted_methods_per_class(class_data),
             }
 
         return results
@@ -50,7 +52,6 @@ class Metrics:
         This function calculates various metrics for each class present in the 
             dataset.
         The metrics include 
-            Weighted Methods per Class (WMC)
             Number of Parameters (NOP)
             Logical Lines of Code (LLOC)
         """
@@ -61,11 +62,7 @@ class Metrics:
         for class_name in self._classes_data.keys():
             for method in self._classes_data[class_name].methods.keys():
                 method_data = self._classes_data[class_name].methods[method]
-                class_data = self._classes_data[class_name]
                 results[class_name][method] = {
-                    'WMC': self.wheighted_methods_per_class(
-                        method_data, class_data.lloc
-                    ),
                     'LLOC': self.logical_lines_of_code(method_data),
                     'NOP': self.number_of_parameters(method_data),
                 }
@@ -82,14 +79,17 @@ class Metrics:
         return self.calculate_class_metrics(), self.calculate_method_metrics()
 
     @staticmethod
-    def wheighted_methods_per_class(class_obj: Class, class_lloc: int) -> list:
+    def wheighted_methods_per_class(class_obj: Class) -> list:
         """
         Calculates the weighted methods per class (WMC) of the given class.
 
         The weighted methods per class is the number of logical lines of code (LLOC)
             of the method divided by the total number of LLOC of the class.
         """
-        return class_obj.lloc / class_lloc
+        wmc = 0
+        for method in class_obj.methods.values():
+            wmc += method.lloc
+        return wmc
 
     @staticmethod
     def depth_of_inheritance_tree(class_obj: Class) -> int:
@@ -221,3 +221,10 @@ class Metrics:
         Calculates the number of attributes (NOA) for the given class.
         """
         return len(class_obj.attributes)
+
+    @staticmethod
+    def number_of_methods(class_obj: Class) -> int:
+        """
+        Calculates the number of methods (NOM) for the given class.
+        """
+        return len(class_obj.methods.keys())

@@ -1,7 +1,7 @@
 
 import argparse
 
-from pycktools.pycktools_run import run
+from pycktools.pycktools_run import PyCKTools
 
 '''
 This module contains the main() function, which is the entry point for the
@@ -13,7 +13,7 @@ __version__ = '1.0.0'
 def main():
     '''The entry point for Setuptools.'''
 
-    parser = argparse.ArgumentParser(description="Execute MyLibrary from the console.")
+    parser = argparse.ArgumentParser(description="Execute PyCKTools from the console.")
     parser.add_argument(
         "path", type=str, help="Path of the analyzed code.", default='.', nargs='?'
     )
@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        run(args.path, args.format)
+        PyCKTools.run(args.path, args.format)
     except Exception as e:
         print(e)
 

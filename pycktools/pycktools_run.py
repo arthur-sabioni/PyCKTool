@@ -2,19 +2,22 @@ from pycktools.output_handler.output_handler import OutputHandler
 from pycktools.parser.folder_parser import FolderParser
 from pycktools.metrics.metrics import Metrics
 
-def run(path: str, output_format: str= 'csv') -> None:
+class PyCKTools:
 
-    fp = FolderParser(path)
-    fp.parse_path()
+    @staticmethod
+    def run(path: str, output_format: str= 'csv') -> None:
 
-    metrics = Metrics(fp.parser.classes)
-    results_class, results_methods = metrics.calculate_all_metrics()
+        fp = FolderParser(path)
+        fp.parse_path()
 
-    OutputHandler.save_results(
-        results_class, results_methods, 'results', output_format
-    )
+        metrics = Metrics(fp.parser.classes)
+        results_class, results_methods = metrics.calculate_all_metrics()
+
+        OutputHandler.save_results(
+            results_class, results_methods, 'results', output_format
+        )
 
 if __name__ == "__main__":
 
     path = 'F:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
-    run(path, 'csv')
+    PyCKTools.run(path, 'csv')
