@@ -194,8 +194,11 @@ class CodeParser:
         # If Else nodes separate the body of the orelse sections.
         if hasattr(node, 'orelse'):
             for orelse in node.orelse:
-                for child in orelse.body:
-                    self._extract_methods_data_recursively(child, method_obj, class_name)
+                if hasattr(orelse, 'body'):
+                    for child in orelse.body:
+                        self._extract_methods_data_recursively(child, method_obj, class_name)
+                else:
+                    self._extract_methods_data_recursively(orelse, method_obj, class_name)
 
     def _extract_return_type(self, returns: astroid.Subscript, class_name: str) -> None:
         """
