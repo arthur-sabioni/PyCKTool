@@ -2,8 +2,6 @@
 
 **PyCKTools** is an open-source Python library designed to calculate object-oriented and code-level metrics from Python3 source code.  
 
----
-
 ## Installation
 
 To install PyCKTools, download the source code and run the following command from the project directory:
@@ -11,8 +9,6 @@ To install PyCKTools, download the source code and run the following command fro
 ```bash
 pip install .
 ```
-
----
 
 ## Usage
 
@@ -33,8 +29,6 @@ python -m pycktools ./my_python_project --format csv --output-name metrics_repor
 ```
 
 This will analyze the ./my_python_project directory and save the metrics as a CSV file named metrics_report.csv.
-
----
 
 ## Metrics
 
@@ -70,13 +64,9 @@ The count of parameters accepted by a method.
 1. **Logical Lines of Code (LLOC)**
 The number of code lines inside a method, excluding comments and blank lines.
 
----
-
 ## Contributing
 
 Contributions to PyCKTools are welcome! If you'd like to contribute, please fork the repository and submit a pull request. For any issues or feature requests, please open an issue in the repository.
-
----
 
 ## License
 

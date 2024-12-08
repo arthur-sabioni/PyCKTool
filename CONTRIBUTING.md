@@ -2,8 +2,6 @@
 
 Thank you for your interest in contributing to **PyCKTools**! Contributions are what make open-source projects thrive. Whether you're reporting bugs, suggesting features, or submitting code changes, your help is greatly appreciated.
 
----
-
 ## How to Contribute
 
 ### 1. Reporting Issues
@@ -61,14 +59,10 @@ git push origin feature/your-feature-name
 3. Click **New Pull Request**.
 4. Select your branch and submit the pull request.
 
----
-
 ## Code Style Guidelines
 - Follow [PEP 8](https://peps.python.org/pep-0008/) for Python code.
 - Use clear and descriptive variable and function names.
 - Keep your code modular and maintainable.
-
----
 
 ## Running the Project Locally
 To set up the project locally, follow these steps:
@@ -82,8 +76,6 @@ To set up the project locally, follow these steps:
    pip install -r requirements.txt
    ```
 3. Run the library with test files or sample data.
-
----
 
 ## Questions or Help?
 If you have any questions or need help with your contributions, feel free to open a discussion or contact the maintainers via the issue tracker.

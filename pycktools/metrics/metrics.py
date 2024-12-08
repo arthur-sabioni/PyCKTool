@@ -24,12 +24,14 @@ class Metrics:
             Fan Out (FOUT)
             Logical Lines of Code (LLOC)
             Number of Attributes (NOA)
+            Number of Methods (NOM)
         """
         results = {}
     
         for class_name in self._classes_data.keys():
             class_data = self._classes_data[class_name]
             results[class_name] = {
+                'WMC': self.wheighted_methods_per_class(class_data),
                 'DIT': self.depth_of_inheritance_tree(class_data),
                 'NOC': self.number_of_children(class_name, self._classes_data),
                 'CBO': self.coupling_between_classes(class_name, self._classes_data),
@@ -40,7 +42,6 @@ class Metrics:
                 'LLOC': self.logical_lines_of_code(class_data),
                 'NOA': self.number_of_attributes(class_data),
                 'NOM': self.number_of_methods(class_data),
-                'WMC': self.wheighted_methods_per_class(class_data),
             }
 
         return results
@@ -163,9 +164,8 @@ class Metrics:
         """
         Calculates the lack of cohesion metric (LCOM) for the given class.
 
-        The lack of cohesion metric is computed as the number of methods in the
-            class that do not access any attribute of the class, divided by the
-            total number of methods in the class.
+        The lack of cohesion metric is computed as the number of attribute of 
+            the class, divided by the total number of methods in the class.
         """
         if len(class_obj.methods) == 0:
             return 0
