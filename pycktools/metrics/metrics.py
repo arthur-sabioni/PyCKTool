@@ -17,11 +17,11 @@ class Metrics:
             Weighted Methods per Class (WMC)
             Depth of Inheritance Tree (DIT)
             Number of Children (NOC)
-            Coupling Between Classes (CBO)
-            Response for Class (RFC)
-            Lack of Cohesion (LCOM)
             Fan In (FIN)
             Fan Out (FOUT)
+            Coupling Between Objects (CBO)
+            Response for Class (RFC)
+            Lack of Cohesion (LCOM)
             Logical Lines of Code (LLOC)
             Number of Attributes (NOA)
             Number of Methods (NOM)
@@ -34,11 +34,11 @@ class Metrics:
                 'WMC': self.wheighted_methods_per_class(class_data),
                 'DIT': self.depth_of_inheritance_tree(class_data),
                 'NOC': self.number_of_children(class_name, self._classes_data),
+                'FIN': self.fan_in(class_name, self._classes_data),
+                'FOUT': self.fan_out(class_data),
                 'CBO': self.coupling_between_classes(class_name, self._classes_data),
                 'RFC': self.response_for_class(class_data),
                 'LCOM': self.lack_of_cohesion(class_data),
-                'FIN': self.fan_in(class_data),
-                'FOUT': self.fan_out(class_name, self._classes_data),
                 'LLOC': self.logical_lines_of_code(class_data),
                 'NOA': self.number_of_attributes(class_data),
                 'NOM': self.number_of_methods(class_data),
@@ -138,8 +138,8 @@ class Metrics:
 
         The CBO metric is computed as the Fan in + Fan out metrics.
         """
-        fin = Metrics.fan_in(all_classes[class_name])
-        fout = Metrics.fan_out(class_name, all_classes)
+        fin = Metrics.fan_in(class_name, all_classes)
+        fout = Metrics.fan_out(all_classes[class_name])
 
         return fin + fout
 
@@ -175,28 +175,28 @@ class Metrics:
         return len(attributes_accessed) / len(class_obj.methods)
 
     @staticmethod
-    def fan_in(class_obj: Class) -> float:
+    def fan_in(class_name: str, all_classes: dict[str, Class]) -> float:
         """
         Calculates the fan in metric for the given class.
 
         The fan in metric is the number of classes that the given class
             depends on, i.e., the number of classes that calls the given class
         """
-        return len(class_obj.coupled_classes)
+        fan_in = 0
+        for compared_class in all_classes.keys():
+            if class_name in all_classes[compared_class].coupled_classes:
+                fan_in += 1
+        return fan_in
 
     @staticmethod
-    def fan_out(class_name: str, all_classes: dict[str, Class]) -> float:
+    def fan_out(class_obj: Class) -> float:
         """
         Calculates the fan out metric for the given class.
 
         The fan out metric is the number of classes that are dependent on the
             given class, i.e., the number of classes that the given class calls.
         """
-        fan_out = 0
-        for compared_class in all_classes.keys():
-            if class_name in all_classes[compared_class].coupled_classes:
-                fan_out += 1
-        return fan_out
+        return len(class_obj.coupled_classes)
 
     @staticmethod
     def logical_lines_of_code(obj: Model) -> int:

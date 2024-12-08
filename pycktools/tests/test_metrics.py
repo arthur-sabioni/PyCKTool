@@ -1,7 +1,8 @@
 import pytest
 
-from pycktools.metrics.metrics import Method, Metrics
+from pycktools.metrics.metrics import Metrics
 from pycktools.model.class_model import Class
+from pycktools.model.method_model import Method
 
 class TestMetrics:
     # Calculate WMC by summing LLOC of all methods in a class
@@ -123,21 +124,21 @@ class TestMetrics:
         # Assert - ClassA has 1 fan-in and 2 fan-out
         assert cbo == 3
         
-    # Calculate FIN for a class with outgoing dependencies
-    def test_fin_calculation_with_dependencies(self):
+    # Calculate FOUT for a class with outgoing dependencies
+    def test_fout_calculation_with_dependencies(self):
         # Arrange
         class_a = Class("ClassA")
         # Add coupled classes
         class_a.coupled_classes.add("ClassB")
     
         # Act
-        fin = Metrics.fan_in(class_a)
+        fout = Metrics.fan_out(class_a)
     
         # Assert - ClassA has 2 fan-in and 1 fan-out
-        assert fin == 1
+        assert fout == 1
         
-    # Calculate FOUT for a class with incoming dependencies
-    def test_fout_calculation_with_dependencies(self):
+    # Calculate FIN for a class with incoming dependencies
+    def test_fin_calculation_with_dependencies(self):
         # Arrange
         class_a = Class("ClassA")
         class_b = Class("ClassB") 
@@ -154,7 +155,7 @@ class TestMetrics:
         }
     
         # Act
-        fout = Metrics.fan_out("ClassA", all_classes)
+        fin = Metrics.fan_in("ClassA", all_classes)
     
         # Assert - ClassA has 1 fan-in and 2 fan-out
-        assert fout == 2
+        assert fin == 2

@@ -15,13 +15,17 @@ class Class(Model):
         self.possible_coupled_classes: set = set()
         self.parents: list[Class] = list()
 
+    def add_coupled_class(self, coupled_to: str) -> None:
+        if coupled_to != self.name:
+            self.coupled_classes.add(coupled_to)
+
     def process_possible_coupled_classes(self, all_classes: set) -> None:
         """
         Process the possible coupled classes for this class.
         """
         for possible_coupled_class in self.possible_coupled_classes:
             if possible_coupled_class in all_classes:
-                self.coupled_classes.add(possible_coupled_class)
+                self.add_coupled_class(possible_coupled_class)
 
     def get_all_parent_names(self) -> set[str]:
         """

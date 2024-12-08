@@ -64,17 +64,27 @@ class CodeParser:
             elif isinstance(child, (astroid.If, astroid.For, astroid.While, astroid.Try, astroid.With)):
                 lloc += self.count_lloc_in_compound_statement(child)
         return lloc
+    
+    def _is_built_in(self, node: astroid.NodeNG) -> bool:
+        """
+        Determines if the given node is part of a built-in module.
+        """
+        return node.root().name in {"builtins", "__builtin__"}
 
     def _extract_coupled_classes(self, node: astroid.Name, class_name: str) -> None:
-
-        # Try to infer a class constructor
+        """
+        Tries to infer a class constructor from the given node and add it as a
+        coupled class of the given class name. If it could not infer, it adds
+        the node name as a possible coupled class to be processed later.
+        """
         if isinstance(node, astroid.Name):
             try:
                 inferred = next(node.infer(), None)
                 if inferred is astroid.Uninferable:
                     raise Exception
                 if isinstance(inferred, astroid.ClassDef):
-                    self.classes[class_name].coupled_classes.add(inferred.name)
+                    if not self._is_built_in(inferred):
+                        self.classes[class_name].add_coupled_class(inferred.name)
             except:
                 # If could not infer, try to detect it at post processing
                 self.classes[class_name].possible_coupled_classes.add(node.name)
@@ -105,7 +115,6 @@ class CodeParser:
             attr_name = node.attrname
             if 'self' not in node.expr.as_string():
                 used_class = node.expr.as_string()
-                self.classes[class_name].coupled_classes.add(used_class)
                 attr_name = used_class + '.' + attr_name
             obj.accessed_attributes.add(attr_name)
 
@@ -147,17 +156,72 @@ class CodeParser:
         method_obj = Method(method_name)
         method_obj.lloc = self.count_lloc(node)
         method_obj.number_of_parameters = len(node.args.args)
+
+        # Add parameters types to possible coupled classes
+        for typing in node.args.annotations:
+            if isinstance(typing, astroid.Name) and not self._is_built_in(typing):
+                self.classes[class_name].possible_coupled_classes.add(typing.name)
+
+        # Add return type to possible coupled classes
+        if node.returns:
+            self._extract_return_type(node.returns, class_name)
         
         for method_node in node.body:
-            if isinstance(method_node, astroid.Assign):
-                self._extract_self_attributes(method_node, method_obj, class_name)
-            
-            if isinstance(method_node, (astroid.Expr, astroid.Assign)):
-                self._extract_used_attributes_recursive(
-                    method_node.value, method_obj, class_name
-                )
+            self._extract_methods_data_recursively(method_node, method_obj, class_name)
 
         self.classes[class_name].methods[method_name] = method_obj
+
+    def _extract_methods_data_recursively(
+            self, node, method_obj: Method, class_name: str
+        ) -> None:
+        """
+        Recursively traverse the given method node and extract the methods that
+            are called and the attributes that are accessed.
+        """
+        if isinstance(node, astroid.Assign):
+            self._extract_self_attributes(node, method_obj, class_name)
+        
+        if isinstance(node, (astroid.Expr, astroid.Assign)):
+            self._extract_used_attributes_recursive(
+                node.value, method_obj, class_name
+            )
+
+        # If this method node has a body, traverse through it.
+        if hasattr(node, 'body'):
+            for child in node.body: 
+                self._extract_methods_data_recursively(child, method_obj, class_name)
+        
+        # If Else nodes separate the body of the orelse sections.
+        if hasattr(node, 'orelse'):
+            for orelse in node.orelse:
+                for child in orelse.body:
+                    self._extract_methods_data_recursively(child, method_obj, class_name)
+
+    def _extract_return_type(self, returns: astroid.Subscript, class_name: str) -> None:
+        """
+        Extracts the return type of a method and adds it to the possible coupled 
+            classes of the given class, if it is not a built-in type.
+        """
+        if hasattr(returns, 'slice'):
+            # If there is ".slice", the return is of format 'dict[str, Class]'
+            self.classes[class_name].possible_coupled_classes.add(
+                returns.value.as_string()
+            )
+            if hasattr(returns.slice, 'elts'):
+                for slice in returns.slice.elts:
+                    self.classes[class_name].possible_coupled_classes.add(
+                        slice.as_string()
+                    )
+            else:
+                self.classes[class_name].possible_coupled_classes.add(
+                    returns.slice.as_string()
+                )
+        else:
+            # Simple return
+            self.classes[class_name].possible_coupled_classes.add(
+                returns.as_string()
+            )
+
                             
     def _extract_inheritance(
         self, base: astroid.FunctionDef, class_name: str
@@ -170,6 +234,7 @@ class CodeParser:
         self.classes[base_class] = self._get_class(base_class)
 
         self.classes[class_name].parents.append(self.classes[base_class])
+        self.classes[class_name].add_coupled_class(base_class)
 
     def _extract_classes_data(self, module: astroid.Module) -> None:
         
