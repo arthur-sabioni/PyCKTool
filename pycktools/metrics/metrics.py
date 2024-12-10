@@ -38,7 +38,7 @@ class Metrics:
                 'FOUT': self.fan_out(class_data),
                 'CBO': self.coupling_between_classes(class_name, self._classes_data),
                 'RFC': self.response_for_class(class_data),
-                'LCOM': self.lack_of_cohesion(class_data),
+                'LCOM': self.lack_of_cohesion_4(class_data),
                 'LLOC': self.logical_lines_of_code(class_data),
                 'NOA': self.number_of_attributes(class_data),
                 'NOM': self.number_of_methods(class_data),
@@ -160,35 +160,59 @@ class Metrics:
             len(methods_called_by_methods)
 
     @staticmethod
-    def lack_of_cohesion(class_obj: Class) -> float:
+    def lack_of_cohesion_4(class_obj: Class) -> float:
         """
         Calculates the lack of cohesion metric (LCOM) for the given class.
 
-        The lack of cohesion metric is computed as the LCOM 3, 
-        (m − t)/(m − 1), M being the number of methods and t the number of 
-        accessed attributes.
-        t is calculated by 1 - LCOM 2
+        The lack of cohesion metric is computed as the LCOM 4, resulting
+        as the number of clusters of a graph where methods and attributes
+        are the vertices and the dependencies between them are the edges.
+        
+        1 is good, 0 and >= 2 is bad.
         """
-        m = len(class_obj.methods)
-        if m == 0:
-            return 0
-                
-        if len(class_obj.attributes) == 0:
-            return 0
-
-        attribute_count = {}
+        attributes = map(lambda y: y[0], class_obj.attributes)
+        methods = class_obj.methods.keys()
+    
+        # Instantiate vertices and edges
+        vertices = list(set(attributes).union(methods))
+        edges = []
+        for _ in range(len(vertices)):
+            edges.append([0 for _ in range(len(vertices))])
+            
+        # Fill edges
         for method in class_obj.methods.values():
             for attribute in method.accessed_attributes:
-                attribute_count[attribute] = attribute_count.get(attribute, 0) + 1
-        
-        # I want to count how many methods the attribute was *not* accessed.
-        for attribute in attribute_count.keys():
-            attribute_count[attribute] = m - attribute_count.get(attribute)
-            
-        lcom2 = sum([x/m for x in attribute_count.values()])/m
-        t = 1-lcom2
+                if attribute in vertices:
+                    edges[vertices.index(attribute)][vertices.index(method.name)] = 1
+                    edges[vertices.index(method.name)][vertices.index(attribute)] = 1
+            for called_method in method.called:
+                if called_method in vertices:
+                    edges[vertices.index(called_method)][vertices.index(method.name)] = 1
+                    edges[vertices.index(method.name)][vertices.index(called_method)] = 1
 
-        return (m-t)/(m-1)
+        # Compute clusters
+        return Metrics.count_connected_components(vertices, edges)
+        
+    @staticmethod
+    def dfs(node, visited, edges):
+        visited[node] = True
+        for neighbor, is_connected in enumerate(edges[node]):
+            if is_connected and not visited[neighbor]:
+                Metrics.dfs(neighbor, visited, edges)
+
+    @staticmethod
+    def count_connected_components(vertices, edges):
+
+        visited = [False] * len(vertices)
+        connected_components = 0
+
+        for node in range(len(vertices)):
+            if not visited[node]:
+                connected_components += 1
+                Metrics.dfs(node, visited, edges)
+
+        return connected_components
+
 
     @staticmethod
     def fan_in(class_name: str, all_classes: dict[str, Class]) -> float:

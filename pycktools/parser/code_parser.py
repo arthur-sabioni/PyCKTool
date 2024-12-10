@@ -102,6 +102,10 @@ class CodeParser:
                 for arg in node.args:
                     self._extract_used_attributes_recursive(arg, obj, class_name)
             called_method = node.func.as_string()
+            if f"{class_name}." in called_method:
+                called_method = called_method.replace(f"{class_name}.", "")
+            if f"self." in called_method:
+                called_method = called_method.replace(f"self.", "")
             obj.called.add(called_method)
 
             self._extract_coupled_classes(node.func, class_name)
@@ -114,7 +118,7 @@ class CodeParser:
         if isinstance(node, astroid.Attribute):
             attr_name = node.as_string()
             if 'self' in attr_name:
-                attr_name.replace("self.", "")
+                attr_name = attr_name.replace("self.", "")
                 obj.accessed_attributes.add(attr_name)
 
     def _extract_self_attributes(self, node, obj: Model, class_name: str) -> None:
@@ -123,7 +127,9 @@ class CodeParser:
             variable from the given node and store the extracted data in the 
             given dictionary.
         """
-        for target in node.targets:
+        # If AnnAssing, target is only one and attribute is different
+        targets = node.targets if hasattr(node, 'targets') else [node.target]
+        for target in targets:
             if isinstance(target, astroid.AssignAttr):
                 attr_name = target.attrname
                 try:
@@ -138,7 +144,15 @@ class CodeParser:
                 self.classes[class_name].attributes.add((
                     attr_name, attr_instance
                 ))
+                if "self." in attr_name:
+                    attr_name = attr_name.replace("self.", "")
                 obj.accessed_attributes.add(attr_name)
+            if isinstance(target, astroid.Subscript):
+                # Case of assing of a new dict that calls functions
+                # E.g.: var = {"key": self.method()}
+                if hasattr(node.value, 'items'):
+                    for item in node.value.items:
+                        self._extract_used_attributes_recursive(item[1], obj, class_name)
         if isinstance(node, astroid.AnnAssign):
             self.classes[class_name].possible_coupled_classes.add(
                 node.annotation.as_string()
