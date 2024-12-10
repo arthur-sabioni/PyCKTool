@@ -19,13 +19,18 @@ class Class(Model):
         if coupled_to != self.name:
             self.coupled_classes.add(coupled_to)
 
-    def process_possible_coupled_classes(self, all_classes: set) -> None:
+    def process_possible_coupled_classes(
+            self, all_classes: set, cleanup: bool = True
+        ) -> None:
         """
         Process the possible coupled classes for this class.
         """
         for possible_coupled_class in self.possible_coupled_classes:
             if possible_coupled_class in all_classes:
                 self.add_coupled_class(possible_coupled_class)
+
+        if cleanup:
+            self.possible_coupled_classes = set()
 
     def get_all_parent_names(self) -> set[str]:
         """

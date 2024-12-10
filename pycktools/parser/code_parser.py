@@ -112,16 +112,15 @@ class CodeParser:
                     self._extract_coupled_classes(node.func.expr, class_name)
 
         if isinstance(node, astroid.Attribute):
-            attr_name = node.attrname
-            if 'self' not in node.expr.as_string():
-                used_class = node.expr.as_string()
-                attr_name = used_class + '.' + attr_name
-            obj.accessed_attributes.add(attr_name)
+            attr_name = node.as_string()
+            if 'self' in attr_name:
+                attr_name.replace("self.", "")
+                obj.accessed_attributes.add(attr_name)
 
-    def _extract_self_attributes(self, node, obj: Model, class_name) -> None:
+    def _extract_self_attributes(self, node, obj: Model, class_name: str) -> None:
         """
         Extract the attributes of the class that are accessed via the 'self' 
-            variablefrom the given node and store the extracted data in the 
+            variable from the given node and store the extracted data in the 
             given dictionary.
         """
         for target in node.targets:
@@ -140,6 +139,10 @@ class CodeParser:
                     attr_name, attr_instance
                 ))
                 obj.accessed_attributes.add(attr_name)
+        if isinstance(node, astroid.AnnAssign):
+            self.classes[class_name].possible_coupled_classes.add(
+                node.annotation.as_string()
+            )
         
     def _extract_methods(
         self, node: astroid.FunctionDef, class_name: str
@@ -178,10 +181,10 @@ class CodeParser:
         Recursively traverse the given method node and extract the methods that
             are called and the attributes that are accessed.
         """
-        if isinstance(node, astroid.Assign):
+        if isinstance(node, (astroid.Assign, astroid.AnnAssign)):
             self._extract_self_attributes(node, method_obj, class_name)
         
-        if isinstance(node, (astroid.Expr, astroid.Assign)):
+        if isinstance(node, (astroid.Expr, astroid.Assign, astroid.AnnAssign)):
             self._extract_used_attributes_recursive(
                 node.value, method_obj, class_name
             )
@@ -262,13 +265,13 @@ class CodeParser:
                         self._extract_methods(class_node, class_name)
 
                     # Attribute assign
-                    if isinstance(class_node, astroid.Assign):
+                    if isinstance(class_node, (astroid.Assign, astroid.AnnAssign)):
                         for target in class_node.targets:
                             attr_name = target.name
                             self.classes[class_name].variables.add(attr_name)
                             
                     # Method call or attribute access
-                    if isinstance(class_node, (astroid.Expr, astroid.Assign)):
+                    if isinstance(class_node, (astroid.Expr, astroid.Assign, astroid.AnnAssign)):
                         self._extract_used_attributes_recursive(
                             class_node.value, self.classes[class_name], class_name
                         )

@@ -164,15 +164,31 @@ class Metrics:
         """
         Calculates the lack of cohesion metric (LCOM) for the given class.
 
-        The lack of cohesion metric is computed as the number of attribute of 
-            the class, divided by the total number of methods in the class.
+        The lack of cohesion metric is computed as the LCOM 3, 
+        (m − t)/(m − 1), M being the number of methods and t the number of 
+        accessed attributes.
+        t is calculated by 1 - LCOM 2
         """
-        if len(class_obj.methods) == 0:
+        m = len(class_obj.methods)
+        if m == 0:
             return 0
-        attributes_accessed = set()
+                
+        if len(class_obj.attributes) == 0:
+            return 0
+
+        attribute_count = {}
         for method in class_obj.methods.values():
-            attributes_accessed.update(method.accessed_attributes)
-        return len(attributes_accessed) / len(class_obj.methods)
+            for attribute in method.accessed_attributes:
+                attribute_count[attribute] = attribute_count.get(attribute, 0) + 1
+        
+        # I want to count how many methods the attribute was *not* accessed.
+        for attribute in attribute_count.keys():
+            attribute_count[attribute] = m - attribute_count.get(attribute)
+            
+        lcom2 = sum([x/m for x in attribute_count.values()])/m
+        t = 1-lcom2
+
+        return (m-t)/(m-1)
 
     @staticmethod
     def fan_in(class_name: str, all_classes: dict[str, Class]) -> float:
