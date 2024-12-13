@@ -23,12 +23,13 @@ def main():
     )
     # TODO: Use output name
     parser.add_argument(
-        "--output-name", type=str, help="Name of the output file."
+        "--output-prefix", type=str, help="Prefix of the output result files.",
+        dest='prefix', default=''
     )
     args = parser.parse_args()
 
     try:
-        PyCKTools.run(args.path, args.format)
+        PyCKTools.run(args.path, args.format, args.prefix)
     except Exception as e:
         print(e)
 

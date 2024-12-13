@@ -1,4 +1,5 @@
 import astroid
+from inspect import ismethod
 
 from pycktools.model.class_model import Class
 from pycktools.model.method_model import Method
@@ -150,9 +151,11 @@ class CodeParser:
             if isinstance(target, astroid.Subscript):
                 # Case of assing of a new dict that calls functions
                 # E.g.: var = {"key": self.method()}
-                if hasattr(node.value, 'items'):
-                    for item in node.value.items:
-                        self._extract_used_attributes_recursive(item[1], obj, class_name)
+                if hasattr(node.value, 'items') and not ismethod(node.value.items):
+                        for item in node.value.items:
+                            self._extract_used_attributes_recursive(item[1], obj, class_name)
+        if isinstance(node.value, astroid.Attribute):
+            obj.accessed_attributes.add(node.value.attrname)
         if isinstance(node, astroid.AnnAssign):
             self.classes[class_name].possible_coupled_classes.add(
                 node.annotation.as_string()
@@ -207,15 +210,18 @@ class CodeParser:
         if hasattr(node, 'body'):
             for child in node.body: 
                 self._extract_methods_data_recursively(child, method_obj, class_name)
-        
+
         # If Else nodes separate the body of the orelse sections.
         if hasattr(node, 'orelse'):
             for orelse in node.orelse:
                 if hasattr(orelse, 'body'):
                     for child in orelse.body:
                         self._extract_methods_data_recursively(child, method_obj, class_name)
-                else:
-                    self._extract_methods_data_recursively(orelse, method_obj, class_name)
+                self._extract_methods_data_recursively(orelse, method_obj, class_name)
+        
+        # Get data from conditionals (IF, ELIF, WHILE)
+        if hasattr(node, 'test'):
+            self._extract_used_attributes_recursive(node.test, method_obj, class_name)
 
     def _extract_return_type(self, returns: astroid.Subscript, class_name: str) -> None:
         """

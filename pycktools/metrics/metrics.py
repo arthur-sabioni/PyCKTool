@@ -172,6 +172,9 @@ class Metrics:
         """
         attributes = map(lambda y: y[0], class_obj.attributes)
         methods = class_obj.methods.keys()
+
+        if len(methods) == 0:
+            return 0
     
         # Instantiate vertices and edges
         vertices = list(set(attributes).union(methods))

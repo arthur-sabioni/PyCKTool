@@ -7,16 +7,16 @@ class OutputHandler:
     @staticmethod
     def save_results(
         classes_data: dict, methods_data: dict, file_name: str, 
-        output_format: str= 'csv'
+        output_format: str= 'csv', prefix: str= ''
     ) -> None:
         """
         Saves the results of the metrics extraction to a CSV or JSON file.
         """
         #TODO: Improve this copy paste
-        path_classes = file_name + '-classes.' + output_format
+        path_classes = prefix + file_name + '-classes.' + output_format
         path_classes = os.path.join(os.getcwd(), path_classes)
 
-        path_methods = file_name + '-methods.' + output_format
+        path_methods = prefix + file_name + '-methods.' + output_format
         path_methods = os.path.join(os.getcwd(), path_methods)
         if output_format == 'csv':
             formatted_classes_data = CSVOutput.format_class_results(classes_data)

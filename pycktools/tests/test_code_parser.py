@@ -70,3 +70,135 @@ class TestCodeParser:
         methods_per_class = list(map(lambda x: x.methods.keys(), parsed_full_code.classes.values()))
         counted_methods = sum(len(x) for x in methods_per_class)
         assert counted_methods == 7
+
+    @pytest.mark.parametrize(
+        'code', [
+            ("""
+                class Test:
+                    def test_function(self):
+                        if(condition):
+                            var = self._used_attribute
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        if(condition):
+                            pass
+                        else:
+                            var = self._used_attribute
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        if(condition):
+                            pass
+                        elif(condition):
+                            function_call()
+                            var = self._used_attribute
+                        else:
+                            pass
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        for _ in range(1):
+                            var = self._used_attribute
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        for _ in range(1):
+                            self._used_attribute = 0
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        for _ in range(1):
+                            if(condition):
+                                self._used_attribute = 0
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        while True:
+                            if(condition):
+                                self._used_attribute = 0
+            """)
+        ]
+    )
+    def test_code_parser_gets_accessed_attriutes_correctly(self, code: str):
+        cp = CodeParser()
+        cp.extract_code_data(code)
+        assert "_used_attribute" in \
+            cp.classes["Test"].methods["test_function"].accessed_attributes
+    
+    @pytest.mark.parametrize(
+        'code', [
+            ("""
+                class Test:
+                    def test_function(self):
+                        if(condition):
+                            self.called_function()
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        if(condition):
+                            pass
+                        else:
+                            self.called_function()
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        if(condition):
+                            pass
+                        elif(condition):
+                            var = self._used_attribute
+                            self.called_function()
+                        else:
+                            pass
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        if(condition):
+                            pass
+                        elif(condition):
+                            pass
+                        else:
+                            self.called_function()
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        for _ in range(1):
+                            var = self.called_function()
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        for _ in range(1):
+                            self.called_function()
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        for _ in range(1):
+                            if(condition):
+                                self.called_function()
+            """),
+            ("""
+                class Test:
+                    def test_function(self):
+                        while True:
+                            if(condition):
+                                self.called_function()
+            """)
+        ]
+    )
+    def test_code_parser_gets_self_calls_correctly(self, code: str):
+        cp = CodeParser()
+        cp.extract_code_data(code)
+        assert "called_function" in \
+            cp.classes["Test"].methods["test_function"].called

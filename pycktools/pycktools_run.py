@@ -5,7 +5,7 @@ from pycktools.metrics.metrics import Metrics
 class PyCKTools:
 
     @staticmethod
-    def run(path: str, output_format: str= 'csv') -> None:
+    def run(path: str, output_format: str= 'csv', prefix: str= '') -> None:
 
         fp = FolderParser(path)
         fp.parse_path()
@@ -14,7 +14,7 @@ class PyCKTools:
         results_class, results_methods = metrics.calculate_all_metrics()
 
         OutputHandler.save_results(
-            results_class, results_methods, 'results', output_format
+            results_class, results_methods, 'results', output_format, prefix
         )
 
 if __name__ == "__main__":
