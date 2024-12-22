@@ -1,3 +1,3 @@
-from pycktools import main
+from pycktool import main
 
 main()

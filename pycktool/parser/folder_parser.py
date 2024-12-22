@@ -2,8 +2,8 @@ import os
 import glob
 import chardet
 
-from pycktools.model.class_model import Class
-from pycktools.parser.code_parser import CodeParser
+from pycktool.model.class_model import Class
+from pycktool.parser.code_parser import CodeParser
 
 class FolderParser:
 

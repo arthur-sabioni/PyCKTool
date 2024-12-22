@@ -1,6 +1,6 @@
 import os
-from pycktools.output_handler.csv_output import CSVOutput
-from pycktools.output_handler.json_output import JSONOutput
+from pycktool.output_handler.csv_output import CSVOutput
+from pycktool.output_handler.json_output import JSONOutput
 
 class OutputHandler:
 
