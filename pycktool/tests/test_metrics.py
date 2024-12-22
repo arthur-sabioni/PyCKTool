@@ -1,8 +1,8 @@
 import pytest
 
-from pycktools.metrics.metrics import Metrics
-from pycktools.model.class_model import Class
-from pycktools.model.method_model import Method
+from pycktool.metrics.metrics import Metrics
+from pycktool.model.class_model import Class
+from pycktool.model.method_model import Method
 
 class TestMetrics:
     # Calculate WMC by summing LLOC of all methods in a class

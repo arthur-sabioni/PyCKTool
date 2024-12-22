@@ -1,9 +1,9 @@
 import astroid
 from inspect import ismethod
 
-from pycktools.model.class_model import Class
-from pycktools.model.method_model import Method
-from pycktools.model.model import Model
+from pycktool.model.class_model import Class
+from pycktool.model.method_model import Method
+from pycktool.model.model import Model
 
 class CodeParser:
 

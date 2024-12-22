@@ -1,5 +1,5 @@
-from pycktools.model.method_model import Method
-from pycktools.model.model import Model
+from pycktool.model.method_model import Method
+from pycktool.model.model import Model
 
 class Class(Model):
 

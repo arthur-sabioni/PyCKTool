@@ -1,5 +1,5 @@
 import pytest
-from pycktools.parser.code_parser import CodeParser
+from pycktool.parser.code_parser import CodeParser
 
 class TestCodeParser:
 
