@@ -4,11 +4,11 @@ import os
 with open(os.path.join('README.md'), 'r') as f:
     long_description = f.read()
     
-with open(os.path.join('pycktools', 'requirements.txt')) as f:
+with open(os.path.join('pycktool', 'requirements.txt')) as f:
     requirements = f.readlines()
 
 setup(
-    name='pycktools',
+    name='pycktool',
     version=1.0,
     author='Arthur Lopes Sabioni',
     author_email='arthur.lsabioni@gmail.com',
@@ -19,7 +19,7 @@ setup(
     packages=find_packages(),
     entry_points={
         "console_scripts": [
-            "pycktools=pycktools.main:main",
+            "pycktool=pycktool.main:main",
         ],
     },
     install_requires=requirements,

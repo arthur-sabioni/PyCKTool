@@ -1,10 +1,10 @@
-# PyCKTools
+# PyCKTool
 
-**PyCKTools** is an open-source Python library designed to calculate object-oriented and code-level metrics from Python3 source code.  
+**PyCKTool** is an open-source Python library designed to calculate object-oriented and code-level metrics from Python3 source code.  
 
 ## Installation
 
-To install PyCKTools, download the source code and run the following command from the project directory:
+To install PyCKTool, download the source code and run the following command from the project directory:
 
 ```bash
 pip install .
@@ -12,10 +12,10 @@ pip install .
 
 ## Usage
 
-Once installed, PyCKTools can be executed from the command line using the following syntax:
+Once installed, PyCKTool can be executed from the command line using the following syntax:
 
 ```bash
-python -m pycktools [path] --format ['csv', 'json'] --output-name OUTPUT_FILE_NAME
+python -m pycktool [path] --format ['csv', 'json'] --output-name OUTPUT_FILE_NAME
 ```
 
 - path: The directory containing the Python code to be analyzed.
@@ -25,7 +25,7 @@ python -m pycktools [path] --format ['csv', 'json'] --output-name OUTPUT_FILE_NA
 Example
 
 ```bash
-python -m pycktools ./my_python_project --format csv --output-name metrics_report
+python -m pycktool ./my_python_project --format csv --output-name metrics_report
 ```
 
 This will analyze the ./my_python_project directory and save the metrics as a CSV file named metrics_report.csv.
@@ -66,8 +66,8 @@ The number of code lines inside a method, excluding comments and blank lines.
 
 ## Contributing
 
-Contributions to PyCKTools are welcome! If you'd like to contribute, please fork the repository and submit a pull request. For any issues or feature requests, please open an issue in the repository.
+Contributions to PyCKTool are welcome! If you'd like to contribute, please fork the repository and submit a pull request. For any issues or feature requests, please open an issue in the repository.
 
 ## License
 
-PyCKTools is released under the MIT License.
+PyCKTool is released under the MIT License.

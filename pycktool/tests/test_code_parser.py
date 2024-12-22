@@ -74,131 +74,182 @@ class TestCodeParser:
     @pytest.mark.parametrize(
         'code', [
             ("""
-                class Test:
-                    def test_function(self):
-                        if(condition):
-                            var = self._used_attribute
+                    if self._used_attribute:
+                        pass
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        if(condition):
-                            pass
-                        else:
-                            var = self._used_attribute
+                    if not True and not self._used_attribute:
+                        pass
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        if(condition):
-                            pass
-                        elif(condition):
-                            function_call()
-                            var = self._used_attribute
-                        else:
-                            pass
+                    if condition:
+                        var = self._used_attribute
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        for _ in range(1):
-                            var = self._used_attribute
+                    if condition:
+                        pass
+                    else:
+                        var = self._used_attribute
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        for _ in range(1):
+                    if condition:
+                        pass
+                    elif condition:
+                        function_call()
+                        var = self._used_attribute
+                    else:
+                        pass
+            """),
+            ("""
+                    for _ in range(1):
+                        var = self._used_attribute
+            """),
+            ("""
+                    for _ in range(1):
+                        self._used_attribute = 0
+            """),
+            ("""
+                    for _ in range(1):
+                        if condition:
                             self._used_attribute = 0
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        for _ in range(1):
-                            if(condition):
-                                self._used_attribute = 0
+                    while True:
+                        if condition:
+                            self._used_attribute = 0
             """),
-            ("""
-                class Test:
-                    def test_function(self):
-                        while True:
-                            if(condition):
-                                self._used_attribute = 0
-            """)
+            ("self._used_attribute.add('foo')"),
+            ("return self._used_attribute"),
+            ("return '', self._used_attribute"),
+            ("return {foo.name for foo in self._used_attribute}")
+        
         ]
     )
     def test_code_parser_gets_accessed_attriutes_correctly(self, code: str):
+        test_code = f"""
+            class Test:
+                def test_function(self):
+                    {code}
+        """
         cp = CodeParser()
-        cp.extract_code_data(code)
+        cp.extract_code_data(test_code)
         assert "_used_attribute" in \
             cp.classes["Test"].methods["test_function"].accessed_attributes
     
     @pytest.mark.parametrize(
         'code', [
             ("""
-                class Test:
-                    def test_function(self):
-                        if(condition):
+                        if condition:
                             self.called_function()
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        if(condition):
+                        if condition:
                             pass
                         else:
                             self.called_function()
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        if(condition):
+                        if condition:
                             pass
-                        elif(condition):
+                        elif condition:
                             var = self._used_attribute
                             self.called_function()
                         else:
                             pass
             """),
             ("""
-                class Test:
-                    def test_function(self):
-                        if(condition):
+                        if condition:
                             pass
-                        elif(condition):
+                        elif condition:
                             pass
                         else:
                             self.called_function()
             """),
             ("""
-                class Test:
-                    def test_function(self):
                         for _ in range(1):
                             var = self.called_function()
             """),
             ("""
-                class Test:
-                    def test_function(self):
                         for _ in range(1):
                             self.called_function()
             """),
             ("""
-                class Test:
-                    def test_function(self):
                         for _ in range(1):
-                            if(condition):
+                            if condition:
                                 self.called_function()
             """),
             ("""
-                class Test:
-                    def test_function(self):
                         while True:
-                            if(condition):
+                            if condition:
                                 self.called_function()
+            """),
+            ("""
+                        return self.called_function()
+            """),
+            ("""
+                        return '',self.called_function()
+            """),
+            ("""
+                        if not true and not self.called_function():
+                            pass
+            """),
+            ("""
+                        try:
+                            foo = self.called_function()
+                        except:
+                            pass
+            """),
+            ("""
+                        try:
+                            pass
+                        except:
+                            self.called_function()
             """)
         ]
     )
     def test_code_parser_gets_self_calls_correctly(self, code: str):
+        test_code = f"""
+            class Test:
+                def test_function(self):
+                    {code}
+        """
         cp = CodeParser()
-        cp.extract_code_data(code)
+        cp.extract_code_data(test_code)
         assert "called_function" in \
+            cp.classes["Test"].methods["test_function"].called
+
+    @pytest.mark.parametrize(
+        'code,function_name', [
+            ("""
+                        self._attribute.add('foo')
+            """, '_attribute.add'),
+            ("""
+                        max([1,2,3])
+            """, 'max'),
+            ("""
+                        set([1,2,3])
+            """, 'set'),
+            ("""
+                        map([1,2,3])
+            """, 'map'),
+            ("""
+                        enumerate([1,2,3])
+            """, 'enumerate'),
+            ("""
+                        foo.append('bar')
+            """, 'foo.append'),
+            ("""
+                        foo.keys()
+            """, 'foo.keys'),
+        ]
+    )
+    def test_code_parser_ignores_called_built_in_functions(self, code:str, function_name: str):
+        test_code = f"""
+            class Test:
+                def test_function(self):
+                    {code}
+        """
+        cp = CodeParser()
+        cp.extract_code_data(test_code)
+        assert function_name not in \
             cp.classes["Test"].methods["test_function"].called

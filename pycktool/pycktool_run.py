@@ -1,8 +1,8 @@
-from pycktools.output_handler.output_handler import OutputHandler
-from pycktools.parser.folder_parser import FolderParser
-from pycktools.metrics.metrics import Metrics
+from pycktool.output_handler.output_handler import OutputHandler
+from pycktool.parser.folder_parser import FolderParser
+from pycktool.metrics.metrics import Metrics
 
-class PyCKTools:
+class PyCKTool:
 
     @staticmethod
     def run(path: str, output_format: str= 'csv', prefix: str= '') -> None:
@@ -19,5 +19,5 @@ class PyCKTools:
 
 if __name__ == "__main__":
 
-    path = 'F:\\CEFET\\TCC\\PyCKTools\\pycktools\\example' 
-    PyCKTools.run(path, 'csv')
+    path = 'F:\\CEFET\\TCC\\pyreverse_output\\PyCKTools' 
+    PyCKTool.run(path, 'csv')

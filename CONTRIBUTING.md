@@ -1,6 +1,6 @@
-# Contributing to PyCKTools
+# Contributing to PyCKTool
 
-Thank you for your interest in contributing to **PyCKTools**! Contributions are what make open-source projects thrive. Whether you're reporting bugs, suggesting features, or submitting code changes, your help is greatly appreciated.
+Thank you for your interest in contributing to **PyCKTool**! Contributions are what make open-source projects thrive. Whether you're reporting bugs, suggesting features, or submitting code changes, your help is greatly appreciated.
 
 ## How to Contribute
 
@@ -20,13 +20,13 @@ Have an idea for a new feature? Create an issue labeled `enhancement` and descri
 We welcome contributions to the codebase! Follow these steps to submit your changes:
 
 #### Step 1: Fork the Repository
-1. Navigate to the **PyCKTools** repository.
+1. Navigate to the **PyCKTool** repository.
 2. Click the **Fork** button to create your copy of the repository.
 
 #### Step 2: Clone the Forked Repository
 ```bash
-git clone https://github.com/your-username/pycktools.git  
-cd pycktools
+git clone https://github.com/your-username/pycktool.git  
+cd pycktool
 ```
 
 #### Step 3: Create a Branch
@@ -54,7 +54,7 @@ git push origin feature/your-feature-name
 ```
 
 #### Step 7: Open a Pull Request
-1. Go to the original **PyCKTools** repository.
+1. Go to the original **PyCKTool** repository.
 2. Click on the **Pull Requests** tab.
 3. Click **New Pull Request**.
 4. Select your branch and submit the pull request.
@@ -68,8 +68,8 @@ git push origin feature/your-feature-name
 To set up the project locally, follow these steps:
 1. Clone the repository:  
     ```bash
-   git clone https://github.com/your-username/pycktools.git  
-   cd pycktools
+   git clone https://github.com/your-username/pycktool.git  
+   cd pycktool
    ```
 2. Install dependencies:  
     ```bash
@@ -80,4 +80,4 @@ To set up the project locally, follow these steps:
 ## Questions or Help?
 If you have any questions or need help with your contributions, feel free to open a discussion or contact the maintainers via the issue tracker.
 
-Thank you for contributing to **PyCKTools**!
+Thank you for contributing to **PyCKTool**!

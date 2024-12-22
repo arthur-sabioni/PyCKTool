@@ -4,10 +4,10 @@ __pycache__/
 *$py.class
 
 # Lib example tests
-pycktools/example/
+pycktool/example/
 
 #
-pycktools/results
+pycktool/results
 
 # C extensions
 *.so

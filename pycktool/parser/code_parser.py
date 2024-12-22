@@ -6,6 +6,8 @@ from pycktools.model.method_model import Method
 from pycktools.model.model import Model
 
 class CodeParser:
+
+
     
     def __init__(self) -> None:
 
@@ -66,11 +68,44 @@ class CodeParser:
                 lloc += self.count_lloc_in_compound_statement(child)
         return lloc
     
-    def _is_built_in(self, node: astroid.NodeNG) -> bool:
+    @staticmethod
+    def is_builtin(node: astroid.NodeNG) -> bool:
         """
         Determines if the given node is part of a built-in module.
         """
         return node.root().name in {"builtins", "__builtin__"}
+    
+    @staticmethod
+    def is_builtin_call(node: astroid.Call) -> bool:
+        try:
+            if isinstance(node.func, astroid.Attribute):
+                # Get the parent object (e.g., `a` in `a.add()`, `d` in `d.keys()`)
+                parent = next(node.func.expr.expr.infer())
+                if CodeParser.is_builtin(parent):
+                    method_name = node.func.attrname
+                    return method_name in dir(parent)
+            else:
+                inferred = next(node.func.infer())
+                return CodeParser.is_builtin(inferred)
+        except astroid.InferenceError:
+            return False
+        except StopIteration:
+            return False
+    
+    def _add_called_method(self, node, obj: Model, class_name: str) -> None:
+
+        called_method = node.func.as_string()
+        if not CodeParser.is_builtin_call(node):
+            if f"{class_name}." in called_method:
+                called_method = called_method.replace(f"{class_name}.", "")
+            if f"self." in called_method:
+                called_method = called_method.replace(f"self.", "")
+            obj.called.add(called_method)
+
+        # Checking if call is a Class method
+        if '.' in called_method:
+            if getattr(node.func, "expr", None):
+                self._extract_coupled_classes(node.func.expr, class_name)
 
     def _extract_coupled_classes(self, node: astroid.Name, class_name: str) -> None:
         """
@@ -84,13 +119,13 @@ class CodeParser:
                 if inferred is astroid.Uninferable:
                     raise Exception
                 if isinstance(inferred, astroid.ClassDef):
-                    if not self._is_built_in(inferred):
+                    if not CodeParser.is_builtin(inferred):
                         self.classes[class_name].add_coupled_class(inferred.name)
             except:
                 # If could not infer, try to detect it at post processing
                 self.classes[class_name].possible_coupled_classes.add(node.name)
     
-    def _extract_used_attributes_recursive(
+    def _extract_used_attributes_and_called_recursive(
         self, node, obj: Model, class_name
     ) -> None:
         """
@@ -99,22 +134,19 @@ class CodeParser:
         The extracted data is stored in the given dictionary.
         """
         if isinstance(node, astroid.Call):
+            # Extract function arguments
             if node.args:
                 for arg in node.args:
-                    self._extract_used_attributes_recursive(arg, obj, class_name)
-            called_method = node.func.as_string()
-            if f"{class_name}." in called_method:
-                called_method = called_method.replace(f"{class_name}.", "")
-            if f"self." in called_method:
-                called_method = called_method.replace(f"self.", "")
-            obj.called.add(called_method)
+                    self._extract_used_attributes_and_called_recursive(arg, obj, class_name)
+
+            # Exctract attribute if it is a call from an attribute
+            # E.g.: self.attribute.add()
+            if hasattr(node.func, 'expr'):
+                self._extract_used_attributes_and_called_recursive(node.func.expr, obj, class_name)
+
+            self._add_called_method(node, obj, class_name)
 
             self._extract_coupled_classes(node.func, class_name)
-
-            # Checking if call is a Class method
-            if '.' in called_method:
-                if getattr(node.func, "expr", None):
-                    self._extract_coupled_classes(node.func.expr, class_name)
 
         if isinstance(node, astroid.Attribute):
             attr_name = node.as_string()
@@ -153,7 +185,7 @@ class CodeParser:
                 # E.g.: var = {"key": self.method()}
                 if hasattr(node.value, 'items') and not ismethod(node.value.items):
                         for item in node.value.items:
-                            self._extract_used_attributes_recursive(item[1], obj, class_name)
+                            self._extract_used_attributes_and_called_recursive(item[1], obj, class_name)
         if isinstance(node.value, astroid.Attribute):
             obj.accessed_attributes.add(node.value.attrname)
         if isinstance(node, astroid.AnnAssign):
@@ -179,7 +211,7 @@ class CodeParser:
 
         # Add parameters types to possible coupled classes
         for typing in node.args.annotations:
-            if isinstance(typing, astroid.Name) and not self._is_built_in(typing):
+            if isinstance(typing, astroid.Name) and not CodeParser.is_builtin(typing):
                 self.classes[class_name].possible_coupled_classes.add(typing.name)
 
         # Add return type to possible coupled classes
@@ -202,26 +234,29 @@ class CodeParser:
             self._extract_self_attributes(node, method_obj, class_name)
         
         if isinstance(node, (astroid.Expr, astroid.Assign, astroid.AnnAssign)):
-            self._extract_used_attributes_recursive(
+            self._extract_used_attributes_and_called_recursive(
                 node.value, method_obj, class_name
             )
 
-        # If this method node has a body, traverse through it.
-        if hasattr(node, 'body'):
-            for child in node.body: 
-                self._extract_methods_data_recursively(child, method_obj, class_name)
-
-        # If Else nodes separate the body of the orelse sections.
-        if hasattr(node, 'orelse'):
-            for orelse in node.orelse:
-                if hasattr(orelse, 'body'):
-                    for child in orelse.body:
-                        self._extract_methods_data_recursively(child, method_obj, class_name)
-                self._extract_methods_data_recursively(orelse, method_obj, class_name)
-        
-        # Get data from conditionals (IF, ELIF, WHILE)
-        if hasattr(node, 'test'):
-            self._extract_used_attributes_recursive(node.test, method_obj, class_name)
+        # All of these attributes are traverseable and contain data
+        possible_node_attributes = [
+            'body', 'orelse', 'test', 'value', 'values', 'elts', 'elt', 'iter',
+            'locals', 'generators', 'operand', 'handlers', 'items'
+        ]
+        for attribute in possible_node_attributes:
+            if not isinstance(node, (astroid.Const)) and \
+               hasattr(node, attribute) and \
+               not ismethod(getattr(node, attribute)):
+                # Attribute could be a list or one single element
+                node_attribute_list = \
+                    getattr(node, attribute) if \
+                    isinstance(getattr(node, attribute), (list, tuple)) else \
+                    [getattr(node, attribute)]
+                for node_attribute in node_attribute_list:
+                    if isinstance(node_attribute, tuple):
+                        node_attribute = node_attribute[0]
+                    self._extract_methods_data_recursively(node_attribute, method_obj, class_name)
+                    self._extract_used_attributes_and_called_recursive(node_attribute, method_obj, class_name)
 
     def _extract_return_type(self, returns: astroid.Subscript, class_name: str) -> None:
         """
@@ -247,7 +282,6 @@ class CodeParser:
             self.classes[class_name].possible_coupled_classes.add(
                 returns.as_string()
             )
-
                             
     def _extract_inheritance(
         self, base: astroid.FunctionDef, class_name: str
@@ -292,7 +326,7 @@ class CodeParser:
                             
                     # Method call or attribute access
                     if isinstance(class_node, (astroid.Expr, astroid.Assign, astroid.AnnAssign)):
-                        self._extract_used_attributes_recursive(
+                        self._extract_used_attributes_and_called_recursive(
                             class_node.value, self.classes[class_name], class_name
                         )
 

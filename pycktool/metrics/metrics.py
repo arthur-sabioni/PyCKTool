@@ -151,9 +151,9 @@ class Metrics:
         The RFC metric is computed as the number of methods in the class, plus
             the number of methods called by the class iself.
         """
-        methods_called_by_methods = set(
-            lambda method: method.called for method in class_obj.methods.values()
-        )
+        methods_called_by_methods = set()
+        for method in class_obj.methods.values():
+            methods_called_by_methods.update(method.called)
         return \
             len(class_obj.methods) + \
             len(class_obj.called)  + \
@@ -173,7 +173,8 @@ class Metrics:
         attributes = map(lambda y: y[0], class_obj.attributes)
         methods = class_obj.methods.keys()
 
-        if len(methods) == 0:
+        if len(methods) == 0 or \
+           len(methods) == 1 and list(methods)[0] == '__init__':
             return 0
     
         # Instantiate vertices and edges
@@ -194,7 +195,7 @@ class Metrics:
                     edges[vertices.index(method.name)][vertices.index(called_method)] = 1
 
         # Compute clusters
-        return Metrics.count_connected_components(vertices, edges)
+        return Metrics.count_connected_components(edges)
         
     @staticmethod
     def dfs(node, visited, edges):
@@ -204,12 +205,12 @@ class Metrics:
                 Metrics.dfs(neighbor, visited, edges)
 
     @staticmethod
-    def count_connected_components(vertices, edges):
+    def count_connected_components(edges):
 
-        visited = [False] * len(vertices)
+        visited = [False] * len(edges)
         connected_components = 0
 
-        for node in range(len(vertices)):
+        for node in range(len(edges)):
             if not visited[node]:
                 connected_components += 1
                 Metrics.dfs(node, visited, edges)
