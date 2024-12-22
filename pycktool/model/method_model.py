@@ -7,5 +7,4 @@ class Method(Model):
         
         super().__init__(name)
 
-        self.lloc: int = 0
         self.number_of_parameters: int = 0
