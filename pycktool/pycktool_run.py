@@ -17,7 +17,9 @@ class PyCKTool:
             results_class, results_methods, 'results', output_format, prefix
         )
 
+        print('PyCKTool execution completed')
+
 if __name__ == "__main__":
 
-    path = 'F:\\CEFET\\TCC\\pyreverse_output\\PyCKTools' 
+    path = r'F:\CEFET\TCC\repositorios\PyCKTool' 
     PyCKTool.run(path, 'csv')

@@ -95,12 +95,12 @@ class CodeParser:
     def _add_called_method(self, node, obj: Model, class_name: str) -> None:
 
         called_method = node.func.as_string()
-        if not CodeParser.is_builtin_call(node):
-            if f"{class_name}." in called_method:
-                called_method = called_method.replace(f"{class_name}.", "")
-            if f"self." in called_method:
-                called_method = called_method.replace(f"self.", "")
-            obj.called.add(called_method)
+        #if not CodeParser.is_builtin_call(node):
+        if f"{class_name}." in called_method:
+            called_method = called_method.replace(f"{class_name}.", "")
+        if f"self." in called_method:
+            called_method = called_method.replace(f"self.", "")
+        obj.called.add(called_method)
 
         # Checking if call is a Class method
         if '.' in called_method:
@@ -189,9 +189,16 @@ class CodeParser:
         if isinstance(node.value, astroid.Attribute):
             obj.accessed_attributes.add(node.value.attrname)
         if isinstance(node, astroid.AnnAssign):
-            self.classes[class_name].possible_coupled_classes.add(
-                node.annotation.as_string()
-            )
+            coupling_to_add = [node.annotation]
+            if hasattr(node.annotation, 'slice'):
+                if hasattr(node.annotation.slice, 'elts'):
+                    coupling_to_add.extend(node.annotation.slice.elts)
+                else:
+                    coupling_to_add.append(node.annotation.slice)
+            for item in coupling_to_add:
+                self.classes[class_name].possible_coupled_classes.add(
+                    item.as_string()
+                )
         
     def _extract_methods(
         self, node: astroid.FunctionDef, class_name: str
@@ -320,7 +327,12 @@ class CodeParser:
 
                     # Attribute assign
                     if isinstance(class_node, (astroid.Assign, astroid.AnnAssign)):
-                        for target in class_node.targets:
+                        targets = list()
+                        if hasattr(class_node, 'target'):
+                            targets = [class_node.target]
+                        else:  
+                            targets = class_node.targets
+                        for target in targets:
                             attr_name = target.name
                             self.classes[class_name].variables.add(attr_name)
                             

@@ -100,7 +100,11 @@ class Metrics:
         The depth is the number of superclasses until the root of the 
             inheritance tree is reached.
         """
-        return Metrics.depth_of_inheritance_tree_recursive(class_obj, 0)
+        try:
+            return Metrics.depth_of_inheritance_tree_recursive(class_obj, 0)
+        except RecursionError:
+            # Maximum recursion depth exceeded. Probably a circular inheritance
+            return 'Circular'
     
     @staticmethod
     def depth_of_inheritance_tree_recursive(class_obj: Class, depth: int) -> int:
