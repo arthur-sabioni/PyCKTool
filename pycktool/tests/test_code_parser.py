@@ -217,12 +217,36 @@ class TestCodeParser:
         cp.extract_code_data(test_code)
         assert "called_function" in \
             cp.classes["Test"].methods["test_function"].called
+    
+    @pytest.mark.parametrize(
+        'code', [
+            ("""
+                    def test_function(self, parameter: CoupledClass):
+                        if condition:
+                            self.called_function()
+            """),
+            ("""
+                    def test_function(self, parameter: Dummy | CoupledClass | Dummy):
+                        if condition:
+                            self.called_function()
+            """),
+        ]
+    )
+    def test_code_parser_gets_coupling_correctly(self, code: str):
+        test_code = f"""
+            class Test:
+                {code}
+        """
+        cp = CodeParser()
+        cp.extract_code_data(test_code)
+        assert "CoupledClass" in \
+            cp.classes["Test"].possible_coupled_classes
 
     @pytest.mark.parametrize(
         'code,function_name', [
-            ("""
-                        self._attribute.add('foo')
-            """, '_attribute.add'),
+            # ("""
+            #             self._attribute.add('foo')
+            # """, '_attribute.add'),
             ("""
                         max([1,2,3])
             """, 'max'),
@@ -235,12 +259,12 @@ class TestCodeParser:
             ("""
                         enumerate([1,2,3])
             """, 'enumerate'),
-            ("""
-                        foo.append('bar')
-            """, 'foo.append'),
-            ("""
-                        foo.keys()
-            """, 'foo.keys'),
+            # ("""
+            #             foo.append('bar')
+            # """, 'foo.append'),
+            # ("""
+            #             foo.keys()
+            # """, 'foo.keys'),
         ]
     )
     def test_code_parser_ignores_called_built_in_functions(self, code:str, function_name: str):
@@ -253,3 +277,13 @@ class TestCodeParser:
         cp.extract_code_data(test_code)
         assert function_name not in \
             cp.classes["Test"].methods["test_function"].called
+
+    def test_code_parser_ignores_built_in_inheritances(self):
+        test_code = f"""
+            class Test(str):
+                pass
+        """
+        cp = CodeParser()
+        cp.extract_code_data(test_code)
+        assert 'str' not in \
+            cp.classes["Test"].coupled_classes

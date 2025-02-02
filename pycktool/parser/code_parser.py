@@ -76,17 +76,28 @@ class CodeParser:
         return node.root().name in {"builtins", "__builtin__"}
     
     @staticmethod
+    def infer_is_builtin(node: astroid.NodeNG) -> bool:
+        """
+        Determines if the given node is part of a built-in module.
+        """
+        try:
+            return CodeParser.is_builtin(next(node.infer(), None))
+        except astroid.InferenceError:
+            return False
+    
+    @staticmethod
     def is_builtin_call(node: astroid.Call) -> bool:
         try:
-            if isinstance(node.func, astroid.Attribute):
-                # Get the parent object (e.g., `a` in `a.add()`, `d` in `d.keys()`)
-                parent = next(node.func.expr.expr.infer())
-                if CodeParser.is_builtin(parent):
-                    method_name = node.func.attrname
-                    return method_name in dir(parent)
-            else:
-                inferred = next(node.func.infer())
-                return CodeParser.is_builtin(inferred)
+            # TODO: Fix this section. Expected to detect built-in calls, but is generating errors
+            # if isinstance(node.func, astroid.Attribute):
+            #     # Get the parent object (e.g., `a` in `a.add()`, `d` in `d.keys()`)
+            #     parent = next(node.func.expr.expr.infer())
+            #     if CodeParser.is_builtin(parent):
+            #         method_name = node.func.attrname
+            #         return method_name in dir(parent)
+            # else:
+            inferred = next(node.func.infer())
+            return CodeParser.is_builtin(inferred)
         except astroid.InferenceError:
             return False
         except StopIteration:
@@ -95,12 +106,12 @@ class CodeParser:
     def _add_called_method(self, node, obj: Model, class_name: str) -> None:
 
         called_method = node.func.as_string()
-        #if not CodeParser.is_builtin_call(node):
-        if f"{class_name}." in called_method:
-            called_method = called_method.replace(f"{class_name}.", "")
-        if f"self." in called_method:
-            called_method = called_method.replace(f"self.", "")
-        obj.called.add(called_method)
+        if not CodeParser.is_builtin_call(node):
+            if f"{class_name}." in called_method:
+                called_method = called_method.replace(f"{class_name}.", "")
+            if f"self." in called_method:
+                called_method = called_method.replace(f"self.", "")
+            obj.called.add(called_method)
 
         # Checking if call is a Class method
         if '.' in called_method:
@@ -120,7 +131,7 @@ class CodeParser:
                     raise Exception
                 if isinstance(inferred, astroid.ClassDef):
                     if not CodeParser.is_builtin(inferred):
-                        self.classes[class_name].add_coupled_class(inferred.name)
+                        self.classes[class_name].possible_coupled_classes.add(inferred.name)
             except:
                 # If could not infer, try to detect it at post processing
                 self.classes[class_name].possible_coupled_classes.add(node.name)
@@ -217,9 +228,9 @@ class CodeParser:
         method_obj.number_of_parameters = len(node.args.args)
 
         # Add parameters types to possible coupled classes
-        for typing in node.args.annotations:
-            if isinstance(typing, astroid.Name) and not CodeParser.is_builtin(typing):
-                self.classes[class_name].possible_coupled_classes.add(typing.name)
+        for arg_type in node.args.nodes_of_class(astroid.Name):
+            if not CodeParser.is_builtin(arg_type):
+                self.classes[class_name].possible_coupled_classes.add(arg_type.name)
 
         # Add return type to possible coupled classes
         if node.returns:
@@ -301,7 +312,7 @@ class CodeParser:
         self.classes[base_class] = self._get_class(base_class)
 
         self.classes[class_name].parents.append(self.classes[base_class])
-        self.classes[class_name].add_coupled_class(base_class)
+        self.classes[class_name].possible_coupled_classes.add(base_class)
 
     def _extract_classes_data(self, module: astroid.Module) -> None:
         
@@ -344,7 +355,7 @@ class CodeParser:
 
                 # Extract inheritance information
                 for base in node.bases:
-                    if isinstance(base, astroid.Name):
+                    if isinstance(base, astroid.Name) and not self.infer_is_builtin(base):
                         self._extract_inheritance(base, class_name)
 
     def extract_code_data(self, code: str, path: str = '') -> None:

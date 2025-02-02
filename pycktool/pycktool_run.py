@@ -21,5 +21,5 @@ class PyCKTool:
 
 if __name__ == "__main__":
 
-    path = r'F:\CEFET\TCC\repositorios\PyCKTool' 
+    path = r'F:\CEFET\TCC\repositorios\pylint' 
     PyCKTool.run(path, 'csv')
