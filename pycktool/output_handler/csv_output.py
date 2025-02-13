@@ -2,7 +2,6 @@ import csv
 
 class CSVOutput:
     
-    #TODO: Both methods below are very similar. Is there a way to improve them?
     @staticmethod
     def format_class_results(data: dict) -> dict:
         """

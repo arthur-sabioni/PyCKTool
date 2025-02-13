@@ -33,7 +33,6 @@ class FolderParser:
         Returns:
             dict: The extracted data.
         """
-        #TODO: Modularize this code
         for file_path in glob.iglob(os.path.join(self.path, '**', '*.py'), recursive=True):
             current_code = ""
             try:

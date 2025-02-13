@@ -9,7 +9,7 @@ with open(os.path.join('pycktool', 'requirements.txt')) as f:
 
 setup(
     name='pycktool',
-    version=1.0,
+    version='1.0.0',
     author='Arthur Lopes Sabioni',
     author_email='arthur.lsabioni@gmail.com',
     license='MIT',
@@ -26,13 +26,10 @@ setup(
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        'License :: MIT License',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.1',
         'Programming Language :: Python :: 3.2',

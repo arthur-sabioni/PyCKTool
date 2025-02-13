@@ -12,7 +12,6 @@ class OutputHandler:
         """
         Saves the results of the metrics extraction to a CSV or JSON file.
         """
-        #TODO: Improve this copy paste
         path_classes = prefix + file_name + '-classes.' + output_format
         path_classes = os.path.join(os.getcwd(), path_classes)
 
