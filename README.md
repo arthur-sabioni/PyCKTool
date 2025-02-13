@@ -37,38 +37,38 @@ Usually, low values in metrics are expected. High values indicate that the eleme
 ### Class-Level Metrics
 
 1. **Weighted Methods per Class (WMC)**
-The sum of the complexities of all methods in a class. Calculated by the sum of LLOCs of methods in the class. 
+The sum of the complexities of all methods in a class. Calculated by the sum of LLOCs of methods in the class.  
 High values indicate that the class has too many responsibilities, and could be splitted into different classes.
 1. **Depth of Inheritance Tree (DIT)**
-The length of the longest path from a class to the root class in the inheritance hierarchy. 
+The length of the longest path from a class to the root class in the inheritance hierarchy.  
 High values indicate worst maintainability, since classes with too many superclasses might need knowledge of all the inheritance tree to be altered.
 1. **Number of Children (NOC)**
-The number of immediate subclasses of a class. 
+The number of immediate subclasses of a class.  
 High values indicate worst maintainability, since changes in the class might impact all of its children.
 1. **Coupling Between Classes (CBO)**
-The count of distinct classes that a given class is directly coupled to (via imports, attributes, or method calls). Calculated by the sum of Fan In and Fan Out. 
-High values indicate that the class is coupled with many classes, so changes in this class might hame many unwanted side effects.
+The count of distinct classes that a given class is directly coupled to (via imports, attributes, or method calls). Calculated by the sum of Fan In and Fan Out.  
+High values indicate that the class is coupled with many classes, so changes in this class might hame many unwanted side effects. 
 1. **Response for Class (RFC)**
-The number of methods that can potentially be executed in response to a message sent to an object of the class. 
+The number of methods that can potentially be executed in response to a message sent to an object of the class.  
 High values indicate that the class has too many responsibilities, and could be splitted into different classes.
 1. **Lack of Cohesion (LCOM)**
-Measures the degree of relatedness between methods and attributes in a class. Low cohesion indicates poor internal organization. Calculated by LCOM4.
-LCOM4 builds a graph where all the vertices are methods and attributes, and edges are uses. So, if a method uses an attribute, or calls another method, an edge connects them. Then, LCOM4 counts how many clusters are in the graph. A connected graph has one cluster.
+Measures the degree of relatedness between methods and attributes in a class. Low cohesion indicates poor internal organization. Calculated by LCOM4.  
+LCOM4 builds a graph where all the vertices are methods and attributes, and edges are uses. So, if a method uses an attribute, or calls another method, an edge connects them. Then, LCOM4 counts how many clusters are in the graph. A connected graph has one cluster.  
 The desired value of the metric is 1. If LCOM calculates as 2 or more, it indicates that the class has more than one responsibility, and should be splitted. If the result is zero, the class has no methods.
 1. **Fan In (FIN)**
-The number of classes that reference a given class.
+The number of classes that reference a given class.  
 High values indicate that the class is coupled with many classes, so changes in this class might hame many unwanted side effects.
 1. **Fan Out (FOUT)**
-The number of other classes referenced by a given class.
+The number of other classes referenced by a given class.  
 High values indicate that the class is coupled with many classes, so changes in this class might hame many unwanted side effects.
 1. **Logical Lines of Code (LLOC)**
-The count of actual code lines, excluding comments and blank lines.
+The count of actual code lines, excluding comments and blank lines.  
 High values indicate that the class is too big, could be hard to maintain and possibly could be splitted into different classes.
 1. **Number of Attributes (NOA)**
-The number of instance variables defined in a class.
+The number of instance variables defined in a class.  
 High values indicate that the class is too big, could be hard to maintain and possibly could be splitted into different classes.
 1. **Number of Methods (NOM)**
-The number of methods defined in a class.
+The number of methods defined in a class.  
 High values indicate that the class is too big, could be hard to maintain and possibly could be splitted into different classes.
 
 ### Method-Level Metrics
