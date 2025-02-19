@@ -17,8 +17,8 @@ class NumberOfChildren(ClassMetric):
         all_classes: dict[str, Class] = context['all_classes']
 
         noc = 0
-        for class_obj in all_classes.values():
-            parents = class_obj.get_all_parent_names()
+        for class_to_check in all_classes.values():
+            parents = class_to_check.get_all_parent_names()
             if class_obj.name in parents:
                 noc += 1
         return noc

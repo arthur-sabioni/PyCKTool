@@ -1,21 +1,26 @@
-from pycktool.metrics.base_metrics.logical_lines_of_code import LogicalLinesOfCode
-
-from pycktool.metrics.class_metric import ClassMetric
-from pycktool.metrics.class_metrics.coupling_between_objects import CouplingBetweenObjects
-from pycktool.metrics.class_metrics.depth_of_inheritance_tree import DepthOfInheritanceTree
-from pycktool.metrics.class_metrics.fan_in import FanIn
-from pycktool.metrics.class_metrics.fan_out import FanOut
-from pycktool.metrics.class_metrics.lack_of_cohesion import LackOfCohesion
-from pycktool.metrics.class_metrics.number_of_attributes import NumberOfAttributes
-from pycktool.metrics.class_metrics.number_of_children import NumberOfChildren
-from pycktool.metrics.class_metrics.number_of_methods import NumberOfMethods
-from pycktool.metrics.class_metrics.response_for_class import ResponseForClass
-from pycktool.metrics.class_metrics.weighted_methods_per_class import WeightedMethodsPerClass
+from pycktool.metrics.base_metrics import (
+    LogicalLinesOfCode
+)
 
 from pycktool.model.class_model import Class
+from pycktool.metrics.class_metric import ClassMetric
+from pycktool.metrics.class_metrics import (
+    CouplingBetweenObjects,
+    DepthOfInheritanceTree,
+    FanIn,
+    FanOut,
+    LackOfCohesion,
+    NumberOfAttributes,
+    NumberOfChildren,
+    NumberOfMethods,
+    ResponseForClass,
+    WeightedMethodsPerClass,
+)
 
 from pycktool.metrics.method_metric import MethodMetric
-from pycktool.metrics.method_metrics.number_of_parameters import NumberOfParameters
+from pycktool.metrics.method_metrics import (
+    NumberOfParameters
+)
 
 
 class MetricsCalculator:
