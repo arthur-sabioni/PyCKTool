@@ -1,6 +1,6 @@
 from pycktool.output_handler.output_handler import OutputHandler
 from pycktool.parser.folder_parser import FolderParser
-from pycktool.metrics.metrics_calculator import MetricsCalculator
+from pycktool.metrics.metrics import Metrics
 
 class PyCKTool:
 
@@ -10,7 +10,7 @@ class PyCKTool:
         fp = FolderParser(path)
         fp.parse_path()
 
-        metrics = MetricsCalculator(fp.parser.classes)
+        metrics = Metrics(fp.parser.classes)
         results_class, results_methods = metrics.calculate_all_metrics()
 
         OutputHandler.save_results(

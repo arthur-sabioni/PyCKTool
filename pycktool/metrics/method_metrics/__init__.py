@@ -1,1 +1,0 @@
-from pycktool.metrics.method_metrics.number_of_parameters import NumberOfParameters
