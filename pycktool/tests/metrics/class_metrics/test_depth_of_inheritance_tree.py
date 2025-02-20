@@ -33,8 +33,6 @@ class TestDepthOfInheritanceTree:
         result = dit_metric.calculate(leaf_class)
 
         # Assert
-        # For intermediate_class1: depth becomes 1 (no parents), and for intermediate_class2: 
-        # depth becomes 1 + 1 (because of root_class) so 2. Hence, the max depth is 2.
         assert result == 2
 
     # Returns 1 for a class with one parent class
