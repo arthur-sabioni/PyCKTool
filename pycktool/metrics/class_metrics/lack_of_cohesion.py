@@ -44,7 +44,8 @@ class LackOfCohesion(ClassMetric):
         # Compute clusters
         return self.count_connected_components(edges)
 
-    def count_connected_components(self, edges):
+    @staticmethod
+    def count_connected_components(edges):
 
         visited = [False] * len(edges)
         connected_components = 0
@@ -52,7 +53,7 @@ class LackOfCohesion(ClassMetric):
         for node in range(len(edges)):
             if not visited[node]:
                 connected_components += 1
-                self.dfs(node, visited, edges)
+                LackOfCohesion.dfs(node, visited, edges)
 
         return connected_components
         
